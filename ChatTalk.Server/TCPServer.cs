@@ -18,14 +18,24 @@ namespace ChatTalk.Server
 		{
 			_listener = new TcpListener(IPAddress.Any, _port);
 			_listener.Start();
-
 			Console.WriteLine($"[Server Start] PORT : {_port}");
 
+			TcpClient client = _listener.AcceptTcpClient();
+			Console.WriteLine($"[Client Connect] {client.Client.RemoteEndPoint}");
+
+			NetworkStream stream = client.GetStream();
+			StreamReader reader = new StreamReader(stream);
+			StreamWriter writer = new StreamWriter(stream) { AutoFlush = true  };
+			
 			while (true)
 			{
-				TcpClient client = _listener.AcceptTcpClient();
-				Console.WriteLine($"[Client Connect] {client.Client.RemoteEndPoint}");
-			}
+				String? message = reader.ReadLine();
+
+				if(message == null) break;
+
+				Console.WriteLine($"Server Receive  : {message}");
+                Console.WriteLine($"Server Response : {message}");
+            }
 		}
 	}
 }
