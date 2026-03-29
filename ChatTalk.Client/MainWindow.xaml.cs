@@ -35,6 +35,12 @@ namespace ChatTalk.Client
 
             StatusTextBlock.Text = $"[접속 시도 중] {serverIP} : {port}";
             StatusTextBlock.Foreground = Brushes.Orange;
+
+            ChatWindow chatWindow = new ChatWindow();
+            chatWindow.Owner = this;
+            chatWindow.Show();
+            
+            this.Hide();
         }
 
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
