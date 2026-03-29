@@ -16,6 +16,8 @@ namespace ChatTalk.Client
     /// </summary>
     public partial class MainWindow : Window
     {
+        private Client _client = new Client();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -25,16 +27,26 @@ namespace ChatTalk.Client
         /* ===================================================================== *
             1. Event
          * ===================================================================== */
-        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        private async void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             string serverIP = ServerIpTextBox.Text;
-            string port = PortTextBox.Text;
+            string portText = PortTextBox.Text;
             string userName = UserNameTextBox.Text;
+            int? port = null;
 
-            if(!validateInputText()) return;
+            if (!ValidateInputText()) return;
+            port = ValidatePort();
+            if (port == null) return;
 
-            StatusTextBlock.Text = $"[접속 시도 중] {serverIP} : {port}";
+            StatusTextBlock.Text = $"[접속 시도 중] {serverIP} : {portText}";
             StatusTextBlock.Foreground = Brushes.Orange;
+
+            if(!await Connect(serverIP, (int)port))
+            {
+                StatusTextBlock.Text = $"[연결 실패] {serverIP} : {portText}";
+                StatusTextBlock.Foreground = Brushes.Orange;
+                return;
+            }
 
             ChatWindow chatWindow = new ChatWindow();
             chatWindow.Owner = this;
@@ -76,18 +88,48 @@ namespace ChatTalk.Client
         /* ===================================================================== *
             2. 사용자정의 함수
          * ===================================================================== */
-        private bool validateInputText()
+        private bool ValidateInputText()
         {
-            if (string.IsNullOrWhiteSpace(ServerIpTextBox.Text) ||
-                string.IsNullOrWhiteSpace(PortTextBox.Text)     ||
-                string.IsNullOrWhiteSpace(UserNameTextBox.Text))
+            string ip       = ServerIpTextBox.Text;
+            string portText = PortTextBox.Text;
+            string userId   = UserNameTextBox.Text;
+
+            if (string.IsNullOrWhiteSpace(ip)      ||
+                string.IsNullOrWhiteSpace(portText)    ||
+                string.IsNullOrWhiteSpace(userId))
             {
-                StatusTextBlock.Text = "입력값을 확인하세요.";
-                StatusTextBlock.Foreground = Brushes.Red;
+                MessageBox.Show("IP, Port, ID를 모두 입력해주세요.");
                 return false;
             }
 
             return true;
+        }
+
+        private int? ValidatePort()
+        {
+            if (!int.TryParse(PortTextBox.Text, out int port))
+            {
+                MessageBox.Show("Port는 숫자로 입력해주세요.");
+                return null;
+            }
+
+            return port;
+        }
+
+        private async Task<bool> Connect(string ip, int port)
+        {
+            try
+            {
+                await _client.ConenectAsync(ip, port);
+                await _client.SendAsync($"^||^ID^||^{UserNameTextBox.Text}\n");
+                MessageBox.Show("서버 연결 성공");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"서버 연결 실패 : {ex.Message}");
+                return false;
+            }
         }
     }
 }
