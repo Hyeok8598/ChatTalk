@@ -5,8 +5,157 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatTalk.Client"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="ChatTalk" 
+        Height="250" Width="360"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True"
+        Background="Transparent">
 
-    </Grid>
+    <Window.Resources>
+        <SolidColorBrush x:Key="WindowBrush" Color="#1E0F2F"/>
+        <SolidColorBrush x:Key="PanelBrush" Color="#2A1542"/>
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#8D5CF6"/>
+        <SolidColorBrush x:Key="HoverBrush" Color="#A855F7"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#6D28D9"/>
+        <SolidColorBrush x:Key="LightTextBrush" Color="#E9D5FF"/>
+        <SolidColorBrush x:Key="WhiteBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="InputBackgroundBrush" Color="#241338"/>
+
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource HoverBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource InputBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Padding" Value="6"/>
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource LightTextBrush}"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{StaticResource WindowBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="16">
+
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="36"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                Background="{StaticResource PanelBrush}"
+                CornerRadius="16, 16, 0, 0"
+                MouseLeftButtonDown="TitleBar_MouseDown">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="ChatTalk"
+                           Margin="12,0, 0, 0"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource WhiteBrush}"
+                           FontWeight="Bold"/>
+
+                    <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+
+                        <Button Content="─"
+                            Width="30"
+                            Background="Transparent"
+                            Foreground="{StaticResource WhiteBrush}"
+                            BorderThickness="0"
+                            Click="Minimize_Click"/>
+
+                        <Button Content="X"
+                            Width="30"
+                            Background="Transparent"
+                            Foreground="{StaticResource WhiteBrush}"
+                            BorderThickness="0"
+                            Click="Close_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+
+            <Grid Grid.Row="1" Margin="10">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="82"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="서버 주소" TextAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 10, 12"/>
+                    <TextBox x:Name="ServerIpTextBox" Grid.Row="0" Grid.Column="1" Text="127.0.0.1" Margin="0, 0, 0, 10"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="포트 번호" TextAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 10, 12"/>
+                    <TextBox x:Name="PortTextBox" Grid.Row="1" Grid.Column="1" Text="5000" Margin="0, 0, 0, 10"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="유저 이름" TextAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 10, 12"/>
+                    <TextBox x:Name="UserNameTextBox" Grid.Row="2" Grid.Column="1" Text="User Name" Margin="0, 0, 0, 10"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="접속" TextAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 10, 12"/>
+
+                    <TextBlock x:Name="StatusTextBlock"
+                    Grid.Row="3" Grid.Column="1"
+                    Text="연결대기"
+                    Margin="0, 0, 10, 10"
+                    TextAlignment="Center"
+                    Foreground="#F87171"
+                    FontWeight="Bold"/>
+
+                    <StackPanel Grid.Row="4"
+                        Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Margin="0, 8, 0, 0">
+
+                        <Button x:Name="ConnectButton"
+                            Content="접속"
+                            Width="65"
+                            Margin="0,0,5,0"
+                            Click="ConnectButton_Click"/>
+
+                        <Button x:Name="CloseButton"
+                            Content="종료"
+                            Width="65"
+                            HorizontalAlignment="Right"
+                            Click="CloseButton_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
 </Window>
