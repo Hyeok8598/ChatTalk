@@ -17,9 +17,12 @@ namespace ChatTalk.Client
     /// </summary>
     public partial class ChatWindow : Window
     {
-        public ChatWindow()
+        private readonly Client _client;
+
+        public ChatWindow(Client client)
         {
             InitializeComponent();
+            _client = client;
         }
 
 
@@ -45,9 +48,15 @@ namespace ChatTalk.Client
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            if (this.Owner != null)
+            if (this.Owner is MainWindow mainWindow)
             {
-                this.Owner.Show();
+                _client.Disconnect();
+                mainWindow.StatusTextBlock.Text = "[연결대기]";
+                mainWindow.StatusTextBlock.Foreground = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString("#F87171")
+                );
+                mainWindow.ConnectButton.IsEnabled = true;
+                mainWindow.Show();
             }
 
             this.Close();
