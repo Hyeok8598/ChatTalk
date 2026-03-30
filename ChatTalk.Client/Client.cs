@@ -36,6 +36,22 @@ namespace ChatTalk.Client
             await _stream.WriteAsync(data, 0, data.Length);
         }
 
+        public async Task ReceiveAsync(Action<String> onMessageReceived)
+        {
+            byte[] buffer = new byte[1024];
+
+            while(_client != null && _client.Connected)
+            {
+                int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length);
+
+                if (bytesRead == 0) break;
+
+                string message = Encoding.UTF8.GetString(buffer);
+
+                onMessageReceived?.Invoke(message);
+            }
+        }
+
         public void Disconnect()
         {
             _stream?.Dispose();

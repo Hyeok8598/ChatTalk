@@ -4,13 +4,25 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatTalk.Client"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         mc:Ignorable="d"
         Title="ChatWindow"
         Height="600" Width="400"
+        MinHeight="400" MinWidth="350"
         WindowStyle="None"
-        ResizeMode="NoResize"
-        WindowStartupLocation="CenterScreen"
-        Background="#1A1B26">
+        ResizeMode="CanResize"
+        ShowInTaskbar="True"
+        WindowStartupLocation="CenterScreen">
+
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome
+        CaptionHeight="50"
+        ResizeBorderThickness="6"
+        CornerRadius="0"
+        GlassFrameThickness="0"
+        UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
 
     <Window.Resources>
         <SolidColorBrush x:Key="MainBackgroundBrush" Color="#1A1B26"/>
@@ -58,8 +70,8 @@
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Padding" Value="12,10"/>
         </Style>
-
     </Window.Resources>
+
 
     <Grid Background="{StaticResource MainBackgroundBrush}">
         <Grid.RowDefinitions>
@@ -69,9 +81,10 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" 
-                Background="{StaticResource SubBackgroundBrush}"
-                BorderBrush="{StaticResource BorderBrushCustom}"
-                BorderThickness="0, 0, 0, 1">
+            Background="{StaticResource SubBackgroundBrush}"
+            BorderBrush="{StaticResource BorderBrushCustom}"
+            MouseLeftButtonDown="TitleBar_MouseDown"
+            BorderThickness="0, 0, 0, 1">
 
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -83,77 +96,56 @@
 
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="16,0,0,0">
                     <TextBlock Text="ChatTalk"
-                               Foreground="{StaticResource TextBrush}"
-                               FontSize="18"
-                               FontWeight="Bold"/>
+                            Foreground="{StaticResource TextBrush}"
+                            FontSize="18"
+                            FontWeight="Bold"/>
                     <TextBlock Text="Connected"
-                               Foreground="{StaticResource SubTextBrush}"
-                               FontSize="11"/>
+                            Foreground="{StaticResource SubTextBrush}"
+                            FontSize="11"/>
                 </StackPanel>
 
                 <Button Grid.Column="1"
-                        Content="―"
-                        FontSize="16"
-                        Margin="4"
-                        Click="Minimize_Click"
-                        Background="Transparent"
-                        Foreground="{StaticResource TextBrush}"/>
+                    Content="―"
+                    FontSize="16"
+                    Margin="4"
+                    Click="Minimize_Click"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                    Background="Transparent"
+                    Foreground="{StaticResource TextBrush}"/>
 
                 <Button Grid.Column="2"
-                        Content="□"
-                        FontSize="16"
-                        Margin="4"
-                        Click="Maximize_Click"
-                        Background="Transparent"
-                        Foreground="{StaticResource TextBrush}"/>
+                    Content="□"
+                    FontSize="16"
+                    Margin="4"
+                    Click="Maximize_Click"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                    Background="Transparent"
+                    Foreground="{StaticResource TextBrush}"/>
 
                 <Button Grid.Column="3"
-                        Content="✕"
-                        FontSize="14"
-                        Margin="4"
-                        Click="Close_Click"
-                        Background="Transparent"
-                        Foreground="{StaticResource TextBrush}"/>
+                    Content="✕"
+                    FontSize="14"
+                    Margin="4"
+                    Click="Close_Click"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                    Background="Transparent"
+                    Foreground="{StaticResource TextBrush}"/>
             </Grid>
         </Border>
 
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto"
-                      Background="{StaticResource MainBackgroundBrush}">
-            <StackPanel x:Name="ChatPanel" Margin="14">
-
-                <StackPanel Margin="0,0,0,12" HorizontalAlignment="Left" MaxWidth="260">
-                    <TextBlock Text="상대방"
-                               Foreground="{StaticResource SubTextBrush}"
-                               FontSize="11"
-                               Margin="8,0,0,4"/>
-                    <Border Background="{StaticResource OtherMessageBrush}"
-                            CornerRadius="14"
-                            Padding="12,10">
-                        <TextBlock Text="안녕하세요."
-                                   Foreground="{StaticResource TextBrush}"
-                                   TextWrapping="Wrap"/>
-                    </Border>
-                </StackPanel>
-
-                <StackPanel Margin="0,0,0,12" HorizontalAlignment="Right" MaxWidth="260">
-                    <Border Background="{StaticResource PrimaryBrush}"
-                            CornerRadius="14"
-                            Padding="12,10">
-                        <TextBlock Text="반갑습니다."
-                                   Foreground="White"
-                                   TextWrapping="Wrap"/>
-                    </Border>
-                </StackPanel>
-            </StackPanel>
+        <ScrollViewer x:Name="ChatScrollViewer"
+                    Grid.Row="1"
+                    VerticalScrollBarVisibility="Auto"
+                    Background="{StaticResource MainBackgroundBrush}">
+            <StackPanel x:Name="ChatPanel" Margin="14"/>
         </ScrollViewer>
-        
+
         <Border Grid.Row="2"
-                Background="{StaticResource SubBackgroundBrush}"
-                BorderBrush="{StaticResource BorderBrushCustom}"
-                BorderThickness="1,1,1,0"
-                CornerRadius="18,18,0,0"
-                Padding="12">
+            Background="{StaticResource SubBackgroundBrush}"
+            BorderBrush="{StaticResource BorderBrushCustom}"
+            BorderThickness="1,1,1,0"
+            CornerRadius="18,18,0,0"
+            Padding="12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -161,17 +153,19 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBox x:Name="MessageTextBox"
-                         Grid.Column="0"
-                         Height="42"
-                         VerticalAlignment="Center"
-                         Margin="0,0,10,0"/>
+                        Grid.Column="0"
+                        Height="42"
+                        KeyDown="MessageTextBox_KeyDown"
+                        VerticalAlignment="Center"
+                        Margin="0,0,10,0"/>
 
                 <Button x:Name="SendButton"
-                        Grid.Column="1"
-                        Content="전송"
-                        Click="SendButton_Click"
-                        VerticalAlignment="Center"/>
+                    Grid.Column="1"
+                    Content="전송"
+                    Click="SendButton_Click"
+                    VerticalAlignment="Center"/>
             </Grid>
         </Border>
     </Grid>
+    
 </Window>

@@ -59,14 +59,6 @@ namespace ChatTalk.Client
 
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 2)
-            {
-                if (this.WindowState == WindowState.Normal)
-                    this.WindowState = WindowState.Maximized;
-                else 
-                    this.WindowState = WindowState.Normal;
-            }
-
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 this.DragMove();
@@ -138,7 +130,6 @@ namespace ChatTalk.Client
             {
                 await _client.ConenectAsync(ip, port);
                 await _client.SendAsync($"^||^ID^||^{UserNameTextBox.Text}\n");
-                MessageBox.Show("서버 연결 성공");
                 return true;
             }
             catch (Exception ex)
