@@ -40,15 +40,17 @@ namespace ChatTalk.Client
 
             StatusTextBlock.Text = $"[접속 시도 중] {serverIP} : {portText}";
             StatusTextBlock.Foreground = Brushes.Orange;
+            ConnectButton.IsEnabled = false;
 
             if(!await Connect(serverIP, (int)port))
             {
                 StatusTextBlock.Text = $"[연결 실패] {serverIP} : {portText}";
                 StatusTextBlock.Foreground = Brushes.Orange;
+                ConnectButton.IsEnabled = true;
                 return;
             }
 
-            ChatWindow chatWindow = new ChatWindow();
+            ChatWindow chatWindow = new ChatWindow(_client);
             chatWindow.Owner = this;
             chatWindow.Show();
             
@@ -94,11 +96,24 @@ namespace ChatTalk.Client
             string portText = PortTextBox.Text;
             string userId   = UserNameTextBox.Text;
 
-            if (string.IsNullOrWhiteSpace(ip)      ||
-                string.IsNullOrWhiteSpace(portText)    ||
-                string.IsNullOrWhiteSpace(userId))
+            if(string.IsNullOrWhiteSpace(ip))
             {
-                MessageBox.Show("IP, Port, ID를 모두 입력해주세요.");
+                MessageBox.Show("IP를 입력해주세요.");
+                ServerIpTextBox.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(portText))
+            {
+                MessageBox.Show("Port를 입력해주세요.");
+                PortTextBox.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                MessageBox.Show("User Name를 입력해주세요.");
+                UserNameTextBox.Focus();
                 return false;
             }
 
@@ -110,6 +125,7 @@ namespace ChatTalk.Client
             if (!int.TryParse(PortTextBox.Text, out int port))
             {
                 MessageBox.Show("Port는 숫자로 입력해주세요.");
+                PortTextBox.Focus();
                 return null;
             }
 

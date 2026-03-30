@@ -31,7 +31,8 @@ namespace ChatTalk.Server
 			{
 				String? message = reader.ReadLine();
 
-				if(message == null) break;
+				if (message == null) break;
+				if (message.Contains("^||^")) continue;
 
 				Console.WriteLine($"Server Receive  : {message}");
                 Console.WriteLine($"Server Response : {message}");

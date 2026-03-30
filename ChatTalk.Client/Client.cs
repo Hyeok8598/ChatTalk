@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ChatTalk.Client
 {
-    internal class Client
+    public class Client
     {
         private TcpClient _client;
         private NetworkStream _stream;

@@ -130,11 +130,10 @@
 
                     <TextBlock x:Name="StatusTextBlock"
                     Grid.Row="3" Grid.Column="1"
-                    Text="연결대기"
                     Margin="0, 0, 10, 10"
                     TextAlignment="Center"
                     Foreground="#F87171"
-                    FontWeight="Bold"/>
+                    FontWeight="Bold"><Run Language="ko-kr" Text="["/><Run Text="연결대기"/><Run Language="ko-kr" Text="]"/></TextBlock>
 
                     <StackPanel Grid.Row="4"
                         Grid.Column="1"
