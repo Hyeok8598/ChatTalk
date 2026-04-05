@@ -114,6 +114,13 @@ namespace ChatTalk.Client
                 return false;
             }
 
+            if(userId.Contains("^||^"))
+            {
+                MessageBox.Show("UserName에는 \"^||^\" 포함된 문자는 사용할 수 없습니다.");
+                UserNameTextBox.Focus();
+                return false;
+            }
+
             return true;
         }
 
@@ -134,7 +141,9 @@ namespace ChatTalk.Client
             try
             {
                 await _client.ConnectAsync(ip, port);
-                await _client.SendAsync($"^||^ID^||^{UserNameTextBox.Text}\n");
+
+                string userName = UserNameTextBox.Text;
+                await _client.SendAsync($"^||^ID^||^{userName}\n");
                 return true;
             }
             catch (Exception ex)

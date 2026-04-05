@@ -8,6 +8,9 @@ namespace ChatTalk.Server
 	{
 		private readonly int _port;
 		private TcpListener _listener;
+		private List<ClientHandler> _clientHandlers = new List<ClientHandler>();
+
+        public string UserName { get; private set; } = "Unknown";
 
 		public TCPServer(int port)
 		{
@@ -16,27 +19,32 @@ namespace ChatTalk.Server
 
 		public void Start()
 		{
-			_listener = new TcpListener(IPAddress.Any, _port);
-			_listener.Start();
-			Console.WriteLine($"[Server Start] PORT : {_port}");
+			this.StartListner();
 
-			TcpClient client = _listener.AcceptTcpClient();
-			Console.WriteLine($"[Client Connect] {client.Client.RemoteEndPoint}");
-
-			NetworkStream stream = client.GetStream();
-			StreamReader reader = new StreamReader(stream);
-			StreamWriter writer = new StreamWriter(stream) { AutoFlush = true  };
 			
 			while (true)
 			{
-				String? message = reader.ReadLine();
+				TcpClient client = AcceptClient();
+				ClientHandler clientHandler = new ClientHandler(client);
+                _clientHandlers.Add(clientHandler);
 
-				if (message == null) break;
-				if (message.Contains("^||^")) continue;
-
-				Console.WriteLine($"Server Receive  : {message}");
-                Console.WriteLine($"Server Response : {message}");
+				_ = clientHandler.ReceiveAsync();
             }
 		}
-	}
+
+		public void StartListner()
+		{
+            _listener = new TcpListener(IPAddress.Any, _port);
+            _listener.Start();
+            Console.WriteLine($"[Server Start] PORT : {_port}");
+        }
+
+		public TcpClient AcceptClient()
+		{
+            TcpClient client = _listener.AcceptTcpClient();
+            Console.WriteLine($"[Client Connect] {client.Client.RemoteEndPoint}");
+
+			return client;
+        }
+    }
 }
