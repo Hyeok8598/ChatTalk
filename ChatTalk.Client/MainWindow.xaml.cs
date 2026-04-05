@@ -50,8 +50,13 @@ namespace ChatTalk.Client
                 return;
             }
 
-            ChatWindow chatWindow = new ChatWindow(_client);
-            chatWindow.Owner = this;
+            ChatWindow chatWindow = new ChatWindow(_client, this);
+            /* 
+             * [Feature007] 26.04.05
+             * Owner 사용하지 않고, ChatWindow에서 직접 받도록 변경
+             * chatWindow.Owner = this; 
+             */
+            chatWindow.Closed += ChatWindow_Closed;
             chatWindow.Show();
             
             this.Hide();
@@ -59,14 +64,6 @@ namespace ChatTalk.Client
 
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 2)
-            {
-                if (this.WindowState == WindowState.Normal)
-                    this.WindowState = WindowState.Maximized;
-                else 
-                    this.WindowState = WindowState.Normal;
-            }
-
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 this.DragMove();
@@ -136,9 +133,8 @@ namespace ChatTalk.Client
         {
             try
             {
-                await _client.ConenectAsync(ip, port);
+                await _client.ConnectAsync(ip, port);
                 await _client.SendAsync($"^||^ID^||^{UserNameTextBox.Text}\n");
-                MessageBox.Show("서버 연결 성공");
                 return true;
             }
             catch (Exception ex)
@@ -146,6 +142,19 @@ namespace ChatTalk.Client
                 MessageBox.Show($"서버 연결 실패 : {ex.Message}");
                 return false;
             }
+        }
+
+        private void ChatWindow_Closed(Object? sender, EventArgs e)
+        {
+            StatusTextBlock.Text = "[연결대기]";
+            StatusTextBlock.Foreground = new SolidColorBrush(
+                (Color)ColorConverter.ConvertFromString("#F87171")
+            );
+            ConnectButton.IsEnabled = true;
+
+            this.Show();
+            this.WindowState = WindowState.Normal;
+            this.Activate();
         }
     }
 }
