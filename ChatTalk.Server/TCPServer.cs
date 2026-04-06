@@ -1,13 +1,12 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 
 namespace ChatTalk.Server
 {
-	class TCPServer
+	public class TCPServer
 	{
 		private readonly int _port;
-		private TcpListener _listener;
+		private TcpListener? _listener;
 		private List<ClientHandler> _clientHandlers = new List<ClientHandler>();
 
         public string UserName { get; private set; } = "Unknown";
@@ -25,7 +24,7 @@ namespace ChatTalk.Server
 			while (true)
 			{
 				TcpClient client = AcceptClient();
-				ClientHandler clientHandler = new ClientHandler(client);
+				ClientHandler clientHandler = new ClientHandler(client, this);
                 _clientHandlers.Add(clientHandler);
 
 				_ = clientHandler.ReceiveAsync();
@@ -46,5 +45,13 @@ namespace ChatTalk.Server
 
 			return client;
         }
+
+		public async Task BroadcastAsync(string message)
+		{
+			foreach (var client in _clientHandlers)
+			{
+				await client.SendAsync(message);
+			}
+		}
     }
 }

@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace ChatTalk.Client
 {
@@ -25,9 +18,11 @@ namespace ChatTalk.Client
             InitializeComponent();
             _client = client;
             _mainWindow = mainWindow;
-            this.ReceiveMessageAsync();
-        }
+            _client.onMessageReceived += OnMessageReceived;
 
+            _ = _client.ReceiveAsync();
+            //this.ReceiveMessageAsync();
+        }
 
         /* ===================================================================== *
             1. Event
@@ -162,21 +157,18 @@ namespace ChatTalk.Client
 
             if (string.IsNullOrEmpty(message)) return;
 
-            await _client.SendAsync(message + "\n");
+            await _client.SendAsync($"^||^MSG^||^{message}");
 
             this.AddMyMessage(message);
             MessageTextBox.Clear();
             MessageTextBox.Focus();
         }
 
-        private async void ReceiveMessageAsync()
+        private void OnMessageReceived(string userName, string message)
         {
-            await _client.ReceiveAsync(message =>
+            Dispatcher.Invoke(() =>
             {
-                Dispatcher.Invoke(() =>
-                {
-                    this.AddOtherMessage("상대방", message);
-                });
+                AddOtherMessage(userName, message);
             });
         }
     }

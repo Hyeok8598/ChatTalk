@@ -1,28 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
+﻿using System.Net.Sockets;
 
 namespace ChatTalk.Server
 {
     public class ClientHandler
     {
-        private readonly TcpClient _client;
         private readonly StreamReader _reader;
         private readonly StreamWriter _writer;
+        private readonly TCPServer _server;
+        private readonly TcpClient _client;
 
         public string UserName { get; private set; } = "UnKnown";
 
-        public ClientHandler(TcpClient client)
+        public ClientHandler(TcpClient client, TCPServer server)
         {
-            var stream = client.GetStream();
+            _client = client;
+            _server = server;
+
+            var stream = _client.GetStream();
             _reader = new StreamReader(stream);
             _writer = new StreamWriter(stream) { AutoFlush = true };
         }
 
         public async Task SendAsync(string message)
         {
+            Console.WriteLine("1111");
             await _writer.WriteLineAsync(message);
+            Console.WriteLine("2222");
         }
 
         public async Task ReceiveAsync()
@@ -37,7 +40,7 @@ namespace ChatTalk.Server
 
                     if (string.IsNullOrEmpty(message)) continue;
 
-                    this.HandleMessage(message);
+                    await this.HandleMessage(message);
                 }
             }
             catch (Exception ex)
@@ -51,8 +54,10 @@ namespace ChatTalk.Server
             }
         }
 
-        private void HandleMessage(string message)
+        private async Task HandleMessage(string message)
         {
+            Console.WriteLine($"[Receive MSG] PORT : {message}");
+
             var parts = message.Split("^||^");
 
             // ^||^ID^||^BLABLA
@@ -67,6 +72,7 @@ namespace ChatTalk.Server
                         break;
                     case "MSG":
                         string msg = parts[2];
+                        await SendMessageAsync(msg);
                         break;
                 }
             }
@@ -79,9 +85,10 @@ namespace ChatTalk.Server
             this.UserName = trimUserName;
         }
 
-        private void SendMessageAsync(string message)
+        private async Task SendMessageAsync(string message)
         {
-            string fullMsg = $"^||^{this.UserName}^||^{message}";
+            string fullMsg = $"^||^{this.UserName}^||^{message}\n";
+            await _server.BroadcastAsync(fullMsg);
         }
 
         private bool ValidateUserName(string userName)
