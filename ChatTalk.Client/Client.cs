@@ -12,6 +12,11 @@ namespace ChatTalk.Client
         private StreamWriter? _writer;
         private Stream? _stream;
 
+        private readonly HashSet<string> _sentMessageIds = new HashSet<string>();
+        private string _userName = string.Empty;
+
+        public event Action<string, string>? onMessageReceived;
+
         public bool IsConnected => _client != null && _client.Connected;
 
         public async Task ConnectAsync(string ip, int port)
@@ -32,6 +37,21 @@ namespace ChatTalk.Client
             _stream = _client.GetStream();
             _reader = new StreamReader(_stream, Encoding.UTF8);
             _writer = new StreamWriter(_stream, Encoding.UTF8) { AutoFlush = true };
+        }
+
+        public async Task SendUserNameAsync(string userName)
+        {
+            _userName = userName;
+            string parsingData = $"ID^||^{userName}\n";
+            await SendAsync(parsingData);
+        }
+
+        public async Task SendChatAsync(string message)
+        {
+            string messageId = Guid.NewGuid().ToString();
+            _sentMessageIds.Add(messageId);
+            string parsingData = $"MSG^||^{_userName}^||^{messageId}^||^{message}\n";
+            await SendAsync(parsingData);
         }
 
         public async Task SendAsync(string message)
@@ -87,13 +107,14 @@ namespace ChatTalk.Client
         public void HandleReceivedMessage(string parsingData) {
             string[]? parts = parsingData.Split("^||^");
 
-            if (parts.Length < 3) return;
+            //if (parts.Length < 3) return;
 
-            string userName = parts[1];
-            string message = string.Join("^||^", parts.Skip(2));
+            string receiveMsgId = parts[0];
+
+            if (_sentMessageIds.Contains(receiveMsgId)) return;
+            string userName     = parts[1];
+            string message      = string.Join("^||^", parts.Skip(2));
             onMessageReceived?.Invoke(userName, message);
         }
-
-        public event Action<string, string>? onMessageReceived;
     }
 }

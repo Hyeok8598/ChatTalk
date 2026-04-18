@@ -157,7 +157,7 @@ namespace ChatTalk.Client
 
             if (string.IsNullOrEmpty(message)) return;
 
-            await _client.SendAsync($"^||^MSG^||^{message}");
+            await _client.SendChatAsync(message);
 
             this.AddMyMessage(message);
             MessageTextBox.Clear();

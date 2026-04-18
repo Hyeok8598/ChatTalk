@@ -9,7 +9,7 @@ namespace ChatTalk.Server
 		private TcpListener? _listener;
 		private List<ClientHandler> _clientHandlers = new List<ClientHandler>();
 
-        public string UserName { get; private set; } = "Unknown";
+        //public string UserName { get; private set; } = "Unknown";
 
 		public TCPServer(int port)
 		{

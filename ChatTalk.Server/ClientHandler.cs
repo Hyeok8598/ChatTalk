@@ -11,6 +11,8 @@ namespace ChatTalk.Server
 
         public string UserName { get; private set; } = "UnKnown";
 
+        private string messageId = string.Empty;
+
         public ClientHandler(TcpClient client, TCPServer server)
         {
             _client = client;
@@ -23,9 +25,8 @@ namespace ChatTalk.Server
 
         public async Task SendAsync(string message)
         {
-            Console.WriteLine("1111");
             await _writer.WriteLineAsync(message);
-            Console.WriteLine("2222");
+            Console.WriteLine($"{UserName}: {message}");
         }
 
         public async Task ReceiveAsync()
@@ -60,18 +61,23 @@ namespace ChatTalk.Server
 
             var parts = message.Split("^||^");
 
-            // ^||^ID^||^BLABLA
-            // [0]: "", [1]: "ID", [2]: "BLABLA" 
-            if (parts.Length >= 3)
+            /*
+             * 1. ID^||^userName
+             *    [0]: "ID", [1]: userName 
+             * 2. MSG^||^userName^||^messageId^||^message
+             *    [0]: "MSG", [1]: userName, [2]: messageId, [3]: message
+             */
+            if (parts.Length >= 2)
             {
-                switch (parts[1])
-                {
+                switch (parts[0])
+                {   
                     case "ID":
-                        string userName = parts[2].Trim();
+                        string userName = parts[1].Trim();
                         SetUserName(userName);
                         break;
                     case "MSG":
-                        string msg = parts[2];
+                        messageId = parts[2].Trim();
+                        string msg = parts[3];
                         await SendMessageAsync(msg);
                         break;
                 }
@@ -79,15 +85,13 @@ namespace ChatTalk.Server
         }
         private void SetUserName(string userName)
         {
-            string trimUserName = userName.Trim();
-            if (!ValidateUserName(trimUserName)) return;
-
-            this.UserName = trimUserName;
+            if (!ValidateUserName(userName)) return;
+            this.UserName = userName;
         }
 
         private async Task SendMessageAsync(string message)
         {
-            string fullMsg = $"^||^{this.UserName}^||^{message}\n";
+            string fullMsg = $"{this.messageId}^||^{this.UserName}^||^{message}\n";
             await _server.BroadcastAsync(fullMsg);
         }
 

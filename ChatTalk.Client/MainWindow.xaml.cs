@@ -136,7 +136,7 @@ namespace ChatTalk.Client
                 await _client.ConnectAsync(ip, port);
 
                 string userName = UserNameTextBox.Text;
-                await _client.SendAsync($"^||^ID^||^{userName}\n");
+                await _client.SendUserNameAsync(userName);
 
                 return true;
             }
