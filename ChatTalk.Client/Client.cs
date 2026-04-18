@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows;
@@ -10,7 +8,14 @@ namespace ChatTalk.Client
     public class Client
     {
         private TcpClient? _client;
-        private NetworkStream? _stream;
+        private StreamReader? _reader;
+        private StreamWriter? _writer;
+        private Stream? _stream;
+
+        private readonly HashSet<string> _sentMessageIds = new HashSet<string>();
+        private string _userName = string.Empty;
+
+        public event Action<string, string>? onMessageReceived;
 
         public bool IsConnected => _client != null && _client.Connected;
 
@@ -27,31 +32,49 @@ namespace ChatTalk.Client
                 throw new TimeoutException("서버에 연결할 수 없습니다.");
             }
 
+            await connectTask;
+
             _stream = _client.GetStream();
+            _reader = new StreamReader(_stream, Encoding.UTF8);
+            _writer = new StreamWriter(_stream, Encoding.UTF8) { AutoFlush = true };
+        }
+
+        public async Task SendUserNameAsync(string userName)
+        {
+            _userName = userName;
+            string parsingData = $"ID^||^{userName}\n";
+            await SendAsync(parsingData);
+        }
+
+        public async Task SendChatAsync(string message)
+        {
+            string messageId = Guid.NewGuid().ToString();
+            _sentMessageIds.Add(messageId);
+            string parsingData = $"MSG^||^{_userName}^||^{messageId}^||^{message}\n";
+            await SendAsync(parsingData);
         }
 
         public async Task SendAsync(string message)
         {
-            if (_stream == null) return;
+            if (_writer == null) return;
+            if (string.IsNullOrWhiteSpace(message)) return;
 
-            byte[] data = Encoding.UTF8.GetBytes(message);
-            await _stream.WriteAsync(data, 0, data.Length);
+            await _writer.WriteLineAsync(message);
         }
 
-        public async Task ReceiveAsync(Action<String> onMessageReceived)
+        public async Task ReceiveAsync()
         {
             byte[] buffer = new byte[1024];
             try
             {
                 while (_client != null && _client.Connected)
                 {
-                    int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length);
+                    string? receivedMsg = await _reader.ReadLineAsync();
 
-                    if (bytesRead == 0) break;
+                    if (receivedMsg == null) break;
+                    if (string.IsNullOrWhiteSpace(receivedMsg)) continue;
 
-                    string message = Encoding.UTF8.GetString(buffer);
-
-                    onMessageReceived?.Invoke(message);
+                    this.HandleReceivedMessage(receivedMsg);
                 }
             }
             catch (ObjectDisposedException)
@@ -70,11 +93,28 @@ namespace ChatTalk.Client
 
         public void Disconnect()
         {
+            _reader?.Dispose();
+            _writer?.Dispose();
             _stream?.Dispose();
-            _client?.Dispose();
+            _client?.Close();
 
+            _reader = null;
+            _writer = null;
             _stream = null;
             _client = null;
+        }
+
+        public void HandleReceivedMessage(string parsingData) {
+            string[]? parts = parsingData.Split("^||^");
+
+            //if (parts.Length < 3) return;
+
+            string receiveMsgId = parts[0];
+
+            if (_sentMessageIds.Contains(receiveMsgId)) return;
+            string userName     = parts[1];
+            string message      = string.Join("^||^", parts.Skip(2));
+            onMessageReceived?.Invoke(userName, message);
         }
     }
 }
