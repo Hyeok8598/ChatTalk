@@ -83,6 +83,7 @@ namespace ChatTalk.Server
                 }
             }
         }
+
         private void SetUserName(string userName)
         {
             if (!ValidateUserName(userName)) return;

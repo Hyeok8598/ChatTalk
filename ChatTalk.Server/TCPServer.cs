@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
 
 namespace ChatTalk.Server
@@ -7,7 +8,7 @@ namespace ChatTalk.Server
 	{
 		private readonly int _port;
 		private TcpListener? _listener;
-		private List<ClientHandler> _clientHandlers = new List<ClientHandler>();
+		private static ConcurrentDictionary<string, ClientHandler> _clientDictionary = new();
 
         //public string UserName { get; private set; } = "Unknown";
 
@@ -25,7 +26,7 @@ namespace ChatTalk.Server
 			{
 				TcpClient client = AcceptClient();
 				ClientHandler clientHandler = new ClientHandler(client, this);
-                _clientHandlers.Add(clientHandler);
+                _clientDictionary.TryAdd(clientHandler.UserName, clientHandler);
 
 				_ = clientHandler.ReceiveAsync();
             }
@@ -48,9 +49,10 @@ namespace ChatTalk.Server
 
 		public async Task BroadcastAsync(string message)
 		{
-			foreach (var client in _clientHandlers)
+			foreach (var clientDictionary in _clientDictionary)
 			{
-				await client.SendAsync(message);
+                ClientHandler client = clientDictionary.Value;
+                await client.SendAsync(message);
 			}
 		}
     }
