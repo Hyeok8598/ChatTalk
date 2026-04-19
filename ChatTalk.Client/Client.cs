@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 using System.Windows;
+using ChatTalk.Common.Protocol;
 
 namespace ChatTalk.Client
 {
@@ -50,8 +51,14 @@ namespace ChatTalk.Client
         {
             string messageId = Guid.NewGuid().ToString();
             _sentMessageIds.Add(messageId);
-            string parsingData = $"MSG^||^{_userName}^||^{messageId}^||^{message}\n";
-            await SendAsync(parsingData);
+            string msg = MessageBuilder.CreateChatMessage(_userName, messageId, message);
+            await SendAsync(msg);
+        }
+
+        public async Task SendLeaveAsync()
+        {
+            string msg = MessageBuilder.CreateLeaveMessage(_userName);
+            await SendAsync(msg);
         }
 
         public async Task SendAsync(string message)
@@ -91,8 +98,10 @@ namespace ChatTalk.Client
             }
         }
 
-        public void Disconnect()
+        public async Task Disconnect()
         {
+            await SendLeaveAsync();
+
             _reader?.Dispose();
             _writer?.Dispose();
             _stream?.Dispose();
@@ -105,16 +114,29 @@ namespace ChatTalk.Client
         }
 
         public void HandleReceivedMessage(string parsingData) {
-            string[]? parts = parsingData.Split("^||^");
+            ParsedMessage parsedMessage = MessageParser.Parse(parsingData);
 
-            //if (parts.Length < 3) return;
+            switch(parsedMessage.Type)
+            {
+                case "MSG"    :
+                    string receivedMsgId = parsedMessage.Values[1];
+                    if (_sentMessageIds.Contains(receivedMsgId)) return;
+                    string userNm  = parsedMessage.Values[0];
+                    string message = parsedMessage.Values[2];
+                    onMessageReceived?.Invoke(userNm, message);
+                    break;
 
-            string receiveMsgId = parts[0];
+                case "USRLST" :
+                    string[] users = parsedMessage.Values[0].Split(",");
+                    MessageBox.Show($"{users}");
+                    break;
 
-            if (_sentMessageIds.Contains(receiveMsgId)) return;
-            string userName     = parts[1];
-            string message      = string.Join("^||^", parts.Skip(2));
-            onMessageReceived?.Invoke(userName, message);
+                case "JOIN"   :
+                    break;
+
+                case "LEAVE"  :
+                    break;
+            }
         }
     }
 }

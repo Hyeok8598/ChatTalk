@@ -5,10 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<RootNamespace>ChatTalk.Common</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ChatTalk.Common\ChatTalk.Common.csproj" />
-  </ItemGroup>
 
 </Project>

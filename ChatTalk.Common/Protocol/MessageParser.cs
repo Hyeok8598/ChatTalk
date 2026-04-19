@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ChatTalk.Server
+namespace ChatTalk.Common.Protocol
 {
     public static class MessageParser
     {
@@ -24,7 +24,7 @@ namespace ChatTalk.Server
             parsedMessage.Type = parts[0];
             
             for(int i = 1; i < parts.Length; i++)
-                parsedMessage.Type = parts[i];
+                parsedMessage.Values.Add(parts[i]);
 
             return parsedMessage;
         }

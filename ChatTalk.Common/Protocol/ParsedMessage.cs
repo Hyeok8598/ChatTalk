@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ChatTalk.Server
+namespace ChatTalk.Common.Protocol
 {
     public class ParsedMessage
     {

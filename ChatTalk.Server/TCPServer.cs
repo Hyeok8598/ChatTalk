@@ -8,7 +8,7 @@ namespace ChatTalk.Server
 	{
 		private readonly int _port;
 		private TcpListener? _listener;
-		private static ConcurrentDictionary<string, ClientHandler> _clientDictionary = new();
+		protected static ConcurrentDictionary<string, ClientHandler> _clientDictionary = new();
 
         //public string UserName { get; private set; } = "Unknown";
 
@@ -21,12 +21,11 @@ namespace ChatTalk.Server
 		{
 			this.StartListner();
 
-			
 			while (true)
 			{
 				TcpClient client = AcceptClient();
-				ClientHandler clientHandler = new ClientHandler(client, this);
-                _clientDictionary.TryAdd(clientHandler.UserName, clientHandler);
+
+                ClientHandler clientHandler = new ClientHandler(client, this);
 
 				_ = clientHandler.ReceiveAsync();
             }
@@ -49,11 +48,17 @@ namespace ChatTalk.Server
 
 		public async Task BroadcastAsync(string message)
 		{
-			foreach (var clientDictionary in _clientDictionary)
+            Console.WriteLine($"[Broadcast Message] : {message}");
+            foreach (var clientDictionary in _clientDictionary)
 			{
                 ClientHandler client = clientDictionary.Value;
                 await client.SendAsync(message);
 			}
+		}
+
+		public ConcurrentDictionary<string, ClientHandler> GetClientDictionary()
+		{
+			return _clientDictionary;
 		}
     }
 }

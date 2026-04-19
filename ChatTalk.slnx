@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="ChatTalk.Client/ChatTalk.Client.csproj" />
+  <Project Path="ChatTalk.Common/ChatTalk.Common.csproj" Id="48c81bc3-dc09-4ac9-b4b4-0bd501cf6e07" />
   <Project Path="ChatTalk.Server/ChatTalk.Server.csproj" />
 </Solution>
