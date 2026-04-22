@@ -13,10 +13,10 @@ namespace ChatTalk.Common.Protocol
             return $"MSG{DELIMITER}{userNm}{DELIMITER}{msgId}{DELIMITER}{msg}\n";
         }
 
-        public static string CreateClientListMessage(IEnumerable<string> users)
+        public static string CreateUsrListMessage(IEnumerable<string> users)
         {
             string userList = string.Join(",", users);
-            return $"USRLST{DELIMITER}{userList}\n";
+            return $"USRLIST{DELIMITER}{userList}\n";
         }
 
         public static string CreateJoinMessage(string userNm)
@@ -26,7 +26,7 @@ namespace ChatTalk.Common.Protocol
 
         public static string CreateLeaveMessage(string userNm)
         {
-            return $"LEAVE{DELIMITER}{userNm}\n";
+            return $"LEAVE{DELIMITER}\n";
         }
     }
 }

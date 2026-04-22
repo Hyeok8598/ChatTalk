@@ -99,9 +99,15 @@
                             Foreground="{StaticResource TextBrush}"
                             FontSize="18"
                             FontWeight="Bold"/>
-                    <TextBlock Text="Connected"
+                    <Border Background="Transparent"
+                            Cursor="Hand"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                            MouseLeftButtonDown="ConnectedUserCountTextBlock_MouseLeftButtonDown">
+                        <TextBlock x:Name="ConnectedUserCountTextBlock"
+                            Text="0"
                             Foreground="{StaticResource SubTextBrush}"
                             FontSize="11"/>
+                    </Border>
                 </StackPanel>
 
                 <Button Grid.Column="1"

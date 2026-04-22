@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -12,15 +13,17 @@ namespace ChatTalk.Client
     {
         private readonly Client _client;
         private readonly MainWindow _mainWindow;
+        private string[] _connectedUsers = Array.Empty<string>();
 
         public ChatWindow(Client client, MainWindow mainWindow)
         {
             InitializeComponent();
             _client = client;
             _mainWindow = mainWindow;
-            _client.onMessageReceived += OnMessageReceived;
+            _client.MessageReceived += OnMessageReceived;
+            _client.UserListReceived += OnUserListReceived;
 
-            _ = _client.ReceiveAsync();
+            _ = _client.ReceiveMsgAsync();
             //this.ReceiveMessageAsync();
         }
 
@@ -75,6 +78,13 @@ namespace ChatTalk.Client
 
             if(e.LeftButton == MouseButtonState.Pressed)
                 this.DragMove();
+        }
+
+        private void ConnectedUserCountTextBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            UserListWindow userListWindow = new UserListWindow(_connectedUsers);
+            userListWindow.Owner = this;
+            userListWindow.ShowDialog();
         }
 
         /* ===================================================================== *
@@ -157,7 +167,7 @@ namespace ChatTalk.Client
 
             if (string.IsNullOrEmpty(message)) return;
 
-            await _client.SendChatAsync(message);
+            await _client.SendChatMsgAsync(message);
 
             this.AddMyMessage(message);
             MessageTextBox.Clear();
@@ -170,6 +180,13 @@ namespace ChatTalk.Client
             {
                 AddOtherMessage(userName, message);
             });
+        }
+
+        private void OnUserListReceived(string[] users, string count)
+        {
+            ConnectedUserCountTextBlock.Text = count;
+            _connectedUsers = users;
+            Debug.WriteLine($"################################{string.Join(", ", _connectedUsers)}");
         }
     }
 }

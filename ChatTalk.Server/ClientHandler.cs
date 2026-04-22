@@ -10,6 +10,9 @@ namespace ChatTalk.Server
         private readonly TCPServer _server;
         private readonly TcpClient _client;
 
+        private bool _isRunning = true;
+        private bool _isDisconnected = false;
+
         public string UserName { get; private set; } = "UnKnown";
 
         public ClientHandler(TcpClient client, TCPServer server)
@@ -32,7 +35,7 @@ namespace ChatTalk.Server
         {
             try
             {
-                while (true)
+                while (_isRunning)
                 {
                     string? message = await _reader.ReadLineAsync();
 
@@ -49,7 +52,7 @@ namespace ChatTalk.Server
             }
             finally
             {
-                _client.Close();
+                Disconnect();
                 Console.WriteLine($"[Client Disconnected] {UserName}");
             }
         }
@@ -61,10 +64,16 @@ namespace ChatTalk.Server
             ParsedMessage parsedMessage = MessageParser.Parse(message);
             switch (parsedMessage.Type)
             {   
-                case "ID":
+                case "JOIN":
                     string userName = parsedMessage.Values[0];
                     SetUserName(userName);
                     _server.GetClientDictionary().TryAdd(UserName, this);
+                    await SendClientListMessageAsync();
+                    break;
+
+                case "LEAVE":
+                    _isRunning = false;
+                    _server.GetClientDictionary().TryRemove(UserName, out _);
                     await SendClientListMessageAsync();
                     break;
 
@@ -74,17 +83,6 @@ namespace ChatTalk.Server
                     await SendMessageAsync(msgId, msg);
                     break;
 
-                case "JOIN":
-                    Console.WriteLine($"[Client Join] : {UserName}");
-                    break;
-
-                case "LEAVE":
-                    string leavedUserNm = parsedMessage.Values[0];
-                    _server.GetClientDictionary().TryRemove(UserName, out _);
-                    await SendLeaveMessageAsync();
-                    Disconnect();
-                    Console.WriteLine($"[Client Disconnected] : {UserName}");
-                    break;
             }
         }
 
@@ -102,14 +100,8 @@ namespace ChatTalk.Server
 
         private async Task SendClientListMessageAsync()
         {
-            string clientListMessage = MessageBuilder.CreateClientListMessage(_server.GetClientDictionary().Keys);
+            string clientListMessage = MessageBuilder.CreateUsrListMessage(_server.GetClientDictionary().Keys);
             await _server.BroadcastAsync(clientListMessage);
-        }
-
-        private async Task SendLeaveMessageAsync()
-        {
-            string leaveMessage = MessageBuilder.CreateLeaveMessage(UserName);
-            await _server.BroadcastAsync(leaveMessage);
         }
 
         private bool ValidateUserName(string userName)
@@ -123,6 +115,9 @@ namespace ChatTalk.Server
 
         private void Disconnect()
         {
+            if (_isDisconnected) return;
+            _isDisconnected = true;
+
             _reader?.Dispose();
             _writer?.Dispose();
             _client?.Close();
