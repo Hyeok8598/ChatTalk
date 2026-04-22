@@ -1,4 +1,5 @@
 ﻿using System.Net.Sockets;
+using ChatTalk.Common.Protocol;
 
 namespace ChatTalk.Server
 {
@@ -9,9 +10,10 @@ namespace ChatTalk.Server
         private readonly TCPServer _server;
         private readonly TcpClient _client;
 
-        public string UserName { get; private set; } = "UnKnown";
+        private bool _isRunning = true;
+        private bool _isDisconnected = false;
 
-        private string messageId = string.Empty;
+        public string UserName { get; private set; } = "UnKnown";
 
         public ClientHandler(TcpClient client, TCPServer server)
         {
@@ -33,7 +35,7 @@ namespace ChatTalk.Server
         {
             try
             {
-                while (true)
+                while (_isRunning)
                 {
                     string? message = await _reader.ReadLineAsync();
 
@@ -50,49 +52,56 @@ namespace ChatTalk.Server
             }
             finally
             {
-                _client.Close();
+                Disconnect();
                 Console.WriteLine($"[Client Disconnected] {UserName}");
             }
         }
 
         private async Task HandleMessage(string message)
         {
-            Console.WriteLine($"[Receive MSG] PORT : {message}");
+            Console.WriteLine($"[Received MSG] : {message}");
 
-            var parts = message.Split("^||^");
+            ParsedMessage parsedMessage = MessageParser.Parse(message);
+            switch (parsedMessage.Type)
+            {   
+                case "JOIN":
+                    string userName = parsedMessage.Values[0];
+                    SetUserName(userName);
+                    _server.GetClientDictionary().TryAdd(UserName, this);
+                    await SendClientListMessageAsync();
+                    break;
 
-            /*
-             * 1. ID^||^userName
-             *    [0]: "ID", [1]: userName 
-             * 2. MSG^||^userName^||^messageId^||^message
-             *    [0]: "MSG", [1]: userName, [2]: messageId, [3]: message
-             */
-            if (parts.Length >= 2)
-            {
-                switch (parts[0])
-                {   
-                    case "ID":
-                        string userName = parts[1].Trim();
-                        SetUserName(userName);
-                        break;
-                    case "MSG":
-                        messageId = parts[2].Trim();
-                        string msg = parts[3];
-                        await SendMessageAsync(msg);
-                        break;
-                }
+                case "LEAVE":
+                    _isRunning = false;
+                    _server.GetClientDictionary().TryRemove(UserName, out _);
+                    await SendClientListMessageAsync();
+                    break;
+
+                case "MSG":
+                    string msgId = parsedMessage.Values[1];
+                    string msg = parsedMessage.Values[2];
+                    await SendMessageAsync(msgId, msg);
+                    break;
+
             }
         }
+
         private void SetUserName(string userName)
         {
             if (!ValidateUserName(userName)) return;
             this.UserName = userName;
         }
 
-        private async Task SendMessageAsync(string message)
+        private async Task SendMessageAsync(string messageId, string message)
         {
-            string fullMsg = $"{this.messageId}^||^{this.UserName}^||^{message}\n";
+            string fullMsg = MessageBuilder.CreateChatMessage(UserName, messageId, message);
             await _server.BroadcastAsync(fullMsg);
+        }
+
+        private async Task SendClientListMessageAsync()
+        {
+            string clientListMessage = MessageBuilder.CreateUsrListMessage(_server.GetClientDictionary().Keys);
+            await _server.BroadcastAsync(clientListMessage);
         }
 
         private bool ValidateUserName(string userName)
@@ -102,6 +111,16 @@ namespace ChatTalk.Server
             if (userName.Contains("^||^")) return false;
 
             return true;
+        }
+
+        private void Disconnect()
+        {
+            if (_isDisconnected) return;
+            _isDisconnected = true;
+
+            _reader?.Dispose();
+            _writer?.Dispose();
+            _client?.Close();
         }
     }
 }

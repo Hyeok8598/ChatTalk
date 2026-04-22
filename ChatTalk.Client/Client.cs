@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 using System.Windows;
+using ChatTalk.Common.Protocol;
 
 namespace ChatTalk.Client
 {
@@ -15,7 +16,8 @@ namespace ChatTalk.Client
         private readonly HashSet<string> _sentMessageIds = new HashSet<string>();
         private string _userName = string.Empty;
 
-        public event Action<string, string>? onMessageReceived;
+        public event Action<string, string>? MessageReceived;
+        public event Action<string[], string>? UserListReceived;
 
         public bool IsConnected => _client != null && _client.Connected;
 
@@ -39,22 +41,28 @@ namespace ChatTalk.Client
             _writer = new StreamWriter(_stream, Encoding.UTF8) { AutoFlush = true };
         }
 
-        public async Task SendUserNameAsync(string userName)
+        public async Task SendJoinMsgAsync(string userName)
         {
             _userName = userName;
-            string parsingData = $"ID^||^{userName}\n";
-            await SendAsync(parsingData);
+            string msg = MessageBuilder.CreateJoinMessage(_userName);
+            await SendMsgAsync(msg);
         }
 
-        public async Task SendChatAsync(string message)
+        public async Task SendChatMsgAsync(string message)
         {
             string messageId = Guid.NewGuid().ToString();
             _sentMessageIds.Add(messageId);
-            string parsingData = $"MSG^||^{_userName}^||^{messageId}^||^{message}\n";
-            await SendAsync(parsingData);
+            string msg = MessageBuilder.CreateChatMessage(_userName, messageId, message);
+            await SendMsgAsync(msg);
         }
 
-        public async Task SendAsync(string message)
+        public async Task SendLeaveMsgAsync()
+        {
+            string msg = MessageBuilder.CreateLeaveMessage(_userName);
+            await SendMsgAsync(msg);
+        }
+
+        public async Task SendMsgAsync(string message)
         {
             if (_writer == null) return;
             if (string.IsNullOrWhiteSpace(message)) return;
@@ -62,7 +70,7 @@ namespace ChatTalk.Client
             await _writer.WriteLineAsync(message);
         }
 
-        public async Task ReceiveAsync()
+        public async Task ReceiveMsgAsync()
         {
             byte[] buffer = new byte[1024];
             try
@@ -91,8 +99,10 @@ namespace ChatTalk.Client
             }
         }
 
-        public void Disconnect()
+        public async Task Disconnect()
         {
+            await SendLeaveMsgAsync();
+
             _reader?.Dispose();
             _writer?.Dispose();
             _stream?.Dispose();
@@ -105,16 +115,24 @@ namespace ChatTalk.Client
         }
 
         public void HandleReceivedMessage(string parsingData) {
-            string[]? parts = parsingData.Split("^||^");
+            ParsedMessage parsedMessage = MessageParser.Parse(parsingData);
 
-            //if (parts.Length < 3) return;
-
-            string receiveMsgId = parts[0];
-
-            if (_sentMessageIds.Contains(receiveMsgId)) return;
-            string userName     = parts[1];
-            string message      = string.Join("^||^", parts.Skip(2));
-            onMessageReceived?.Invoke(userName, message);
+            switch(parsedMessage.Type)
+            {
+                case "MSG"    :
+                    string receivedMsgId = parsedMessage.Values[1];
+                    if (_sentMessageIds.Contains(receivedMsgId)) return;
+                    string userNm  = parsedMessage.Values[0];
+                    string message = parsedMessage.Values[2];
+                    MessageReceived?.Invoke(userNm, message);
+                    break;
+                    
+                case "USRLIST" :
+                    string[] users = parsedMessage.Values[0].Split(",");
+                    string userCnt = users.Length.ToString();
+                    UserListReceived?.Invoke(users, userCnt);
+                    break;
+            }
         }
     }
 }
