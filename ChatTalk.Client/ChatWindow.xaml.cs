@@ -1,8 +1,11 @@
-﻿using System.Diagnostics;
+﻿using ChatTalk.Client.Model;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ChatTalk.Client
 {
@@ -90,7 +93,7 @@ namespace ChatTalk.Client
         /* ===================================================================== *
             2. 사용자 정의 함수
          * ===================================================================== */
-        private void AddMyMessage(string message)
+        private void AddMyMessage(ChatMessage chatMessage)
         {
             StackPanel messageContainer = new StackPanel
             {
@@ -98,6 +101,8 @@ namespace ChatTalk.Client
                 HorizontalAlignment = HorizontalAlignment.Right,
                 MaxWidth = 260
             };
+
+            TextBlock? senderText = null;
 
             Border bubble = new Border
             {
@@ -108,11 +113,29 @@ namespace ChatTalk.Client
 
             TextBlock textBlock = new TextBlock
             {
-                Text = message,
+                Text = chatMessage.Content,
                 Foreground = Brushes.White,
                 TextWrapping = TextWrapping.Wrap
             };
 
+            /* 26.04.23 - 귓속말 UI 추가 START */
+            if (chatMessage.IsWhisper)
+            {
+                senderText = new TextBlock
+                {
+                    Text = "[귓속말]",
+                    FontSize = 11,
+                    Margin = new Thickness(8, 0, 0, 4),
+                    Foreground = (Brush)FindResource("SubTextBrush")
+                };
+                textBlock.Text = chatMessage.Content;
+                bubble.Background = (Brush)FindResource("MyWhisperMessageBrush");
+                bubble.BorderBrush = (Brush)FindResource("WhisperBorderBrush");
+                bubble.BorderThickness = new Thickness(1);
+                messageContainer.Children.Add(senderText);
+            }
+            /* 26.04.23 - 귓속말 UI 추가 END  */
+            
             bubble.Child = textBlock;
             messageContainer.Children.Add(bubble);
             ChatPanel.Children.Add(messageContainer);
@@ -120,8 +143,9 @@ namespace ChatTalk.Client
             ChatScrollViewer.ScrollToEnd();
         }
 
-        private void AddOtherMessage(string sender, string message)
+        private void AddOtherMessage(ChatMessage chatMessage)
         {
+            
             StackPanel messageContainer = new StackPanel
             {
                 Margin = new Thickness(0, 0, 0, 12),
@@ -131,7 +155,7 @@ namespace ChatTalk.Client
 
             TextBlock senderText = new TextBlock
             {
-                Text = sender,
+                Text = chatMessage.SenderName,
                 FontSize = 11,
                 Margin = new Thickness(8, 0, 0, 4),
                 Foreground= (Brush)FindResource("SubTextBrush")
@@ -146,10 +170,24 @@ namespace ChatTalk.Client
 
             TextBlock messageText = new TextBlock
             {
-                Text = message,
+                Text = chatMessage.Content,
                 Foreground = (Brush)FindResource("TextBrush"),
                 TextWrapping = TextWrapping.Wrap
             };
+
+            /* 26.04.23 - 귓속말 UI 추가 START */
+            if (chatMessage.IsWhisper)
+            {
+                senderText.Text = $"[귓속말] {chatMessage.SenderName}";
+                senderText.Foreground = (Brush)FindResource("WhisperLabelBrush");
+
+                bubble.Background = (Brush)FindResource("WhisperMessageBrush");
+                bubble.BorderBrush = (Brush)FindResource("WhisperBorderBrush");
+                bubble.BorderThickness = new Thickness(1);
+
+                messageText.Foreground = (Brush)FindResource("WhisperTextBrush");
+            }
+            /* 26.04.23 - 귓속말 UI 추가 END   */
 
             bubble.Child = messageText;
 
@@ -164,21 +202,57 @@ namespace ChatTalk.Client
         private async Task SendMessageAsync()
         {
             string message = MessageTextBox.Text.Trim();
+            ChatMessage chatMessage;
 
             if (string.IsNullOrEmpty(message)) return;
 
-            await _client.SendChatMsgAsync(message);
+            if (message.StartsWith("/w "))
+            {
+                string[] parts = message.Split(" ", 3); /* /w user 안녕하세요. */
+                if (parts.Length < 3)
+                {
+                    MessageBox.Show("귓속말 형식이 올바르지 않습니다. (/w 대상유저 메시지)");
+                    return;
+                }
+                else
+                {
+                    chatMessage = new ChatMessage
+                    {
+                        SenderName = _client.UserName,
+                        Content = message,
+                        Type = MessageType.Whisper,
+                        Direction = MessageDirection.Sent
+                    };
 
-            this.AddMyMessage(message);
+                    string toUsrNm = parts[1];
+                    string msg     = parts[2];
+                    await _client.SendWhisperMsgAsync(toUsrNm, msg);
+                }
+            } 
+            else
+            {
+                chatMessage = new ChatMessage
+                {
+                    SenderName = _client.UserName,
+                    Content = message,
+                    Type = MessageType.Normal,
+                    Direction = MessageDirection.Sent
+                };
+
+                await _client.SendChatMsgAsync(message);
+            }
+
+
+            this.AddMyMessage(chatMessage);
             MessageTextBox.Clear();
             MessageTextBox.Focus();
         }
 
-        private void OnMessageReceived(string userName, string message)
+        private void OnMessageReceived(ChatMessage chatMessage)
         {
             Dispatcher.Invoke(() =>
             {
-                AddOtherMessage(userName, message);
+                AddOtherMessage(chatMessage);
             });
         }
 
@@ -186,7 +260,6 @@ namespace ChatTalk.Client
         {
             ConnectedUserCountTextBlock.Text = count;
             _connectedUsers = users;
-            Debug.WriteLine($"################################{string.Join(", ", _connectedUsers)}");
         }
     }
 }

@@ -34,6 +34,11 @@
         <SolidColorBrush x:Key="TextBrush" Color="#F8FAFC"/>
         <SolidColorBrush x:Key="SubTextBrush" Color="#A1A1AA"/>
         <SolidColorBrush x:Key="BorderBrushCustom" Color="#3B3F5C"/>
+        <SolidColorBrush x:Key="MyWhisperMessageBrush" Color="#3B2F5C"/>
+        <SolidColorBrush x:Key="WhisperMessageBrush" Color="#1C1C28"/>
+        <SolidColorBrush x:Key="WhisperBorderBrush" Color="#8B5CF6"/>
+        <SolidColorBrush x:Key="WhisperLabelBrush" Color="#C4B5FD"/>
+        <SolidColorBrush x:Key="WhisperTextBrush" Color="#F5F3FF"/>
 
         <Style TargetType="Button">
             <Setter Property="Foreground" Value="White"/>

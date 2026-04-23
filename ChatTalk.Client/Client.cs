@@ -1,7 +1,10 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Net.Sockets;
+using System.Security.Policy;
 using System.Text;
 using System.Windows;
+using ChatTalk.Client.Model;
 using ChatTalk.Common.Protocol;
 
 namespace ChatTalk.Client
@@ -14,9 +17,10 @@ namespace ChatTalk.Client
         private Stream? _stream;
 
         private readonly HashSet<string> _sentMessageIds = new HashSet<string>();
-        private string _userName = string.Empty;
+        private string _userName { get; set; } = string.Empty;
+        public string UserName => _userName;
 
-        public event Action<string, string>? MessageReceived;
+        public event Action<ChatMessage>? MessageReceived;
         public event Action<string[], string>? UserListReceived;
 
         public bool IsConnected => _client != null && _client.Connected;
@@ -53,6 +57,12 @@ namespace ChatTalk.Client
             string messageId = Guid.NewGuid().ToString();
             _sentMessageIds.Add(messageId);
             string msg = MessageBuilder.CreateChatMessage(_userName, messageId, message);
+            await SendMsgAsync(msg);
+        }
+
+        public async Task SendWhisperMsgAsync(string toUsrNm, string content)
+        {
+            string msg = MessageBuilder.CreateWhisperMessage(_userName, toUsrNm, content);
             await SendMsgAsync(msg);
         }
 
@@ -124,13 +134,37 @@ namespace ChatTalk.Client
                     if (_sentMessageIds.Contains(receivedMsgId)) return;
                     string userNm  = parsedMessage.Values[0];
                     string message = parsedMessage.Values[2];
-                    MessageReceived?.Invoke(userNm, message);
+
+                    ChatMessage normalMsg = new ChatMessage
+                    {
+                        SenderName = userNm,
+                        Content = message,
+                        Type = MessageType.Normal,
+                        Direction = MessageDirection.Received
+                    };
+
+                    MessageReceived?.Invoke(normalMsg);
                     break;
                     
                 case "USRLIST" :
                     string[] users = parsedMessage.Values[0].Split(",");
                     string userCnt = users.Length.ToString();
                     UserListReceived?.Invoke(users, userCnt);
+                    break;
+
+                case "WHISPER"  :
+                    string fromUsr = parsedMessage.Values[0];
+                    string msg     = parsedMessage.Values[2];
+
+                    ChatMessage whisperMsg = new ChatMessage
+                    {
+                        SenderName = fromUsr,
+                        Content = msg,
+                        Type = MessageType.Whisper,
+                        Direction = MessageDirection.Received
+                    };
+                    
+                    MessageReceived?.Invoke(whisperMsg);
                     break;
             }
         }
