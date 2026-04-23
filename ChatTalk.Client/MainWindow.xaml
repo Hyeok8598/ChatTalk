@@ -124,7 +124,7 @@
                     <TextBox x:Name="PortTextBox" Grid.Row="1" Grid.Column="1" Text="5000" Margin="0, 0, 0, 10"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="유저 이름" TextAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 10, 12"/>
-                    <TextBox x:Name="UserNameTextBox" Grid.Row="2" Grid.Column="1" Text="User Name" Margin="0, 0, 0, 10"/>
+                    <TextBox x:Name="UserNameTextBox" Grid.Row="2" Grid.Column="1" Text="UserName" Margin="0, 0, 0, 10"/>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="접속" TextAlignment="Center" VerticalAlignment="Center" Margin="0, 0, 10, 12"/>
 

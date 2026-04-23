@@ -28,5 +28,10 @@ namespace ChatTalk.Common.Protocol
         {
             return $"LEAVE{DELIMITER}\n";
         }
+
+        public static string CreateWhisperMessage(string fromUsrNm, string toUsrNm, string msg)
+        {
+            return $"WHISPER{DELIMITER}{fromUsrNm}{DELIMITER}{toUsrNm}{DELIMITER}{msg}\n";
+        }
     }
 }

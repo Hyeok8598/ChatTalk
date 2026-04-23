@@ -56,7 +56,15 @@ namespace ChatTalk.Server
 			}
 		}
 
-		public ConcurrentDictionary<string, ClientHandler> GetClientDictionary()
+		public async Task SendToClientAsync(string toUsrNm, string message)
+		{
+            if (_clientDictionary.TryGetValue(toUsrNm, out ClientHandler? client))
+            {
+                await client.SendAsync(message);
+            }
+        }
+
+        public ConcurrentDictionary<string, ClientHandler> GetClientDictionary()
 		{
 			return _clientDictionary;
 		}

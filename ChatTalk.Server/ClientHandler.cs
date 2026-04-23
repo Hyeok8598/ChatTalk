@@ -61,6 +61,8 @@ namespace ChatTalk.Server
         {
             Console.WriteLine($"[Received MSG] : {message}");
 
+            string msg, msgId, fromUsrNm, toUsrNm;
+
             ParsedMessage parsedMessage = MessageParser.Parse(message);
             switch (parsedMessage.Type)
             {   
@@ -78,11 +80,17 @@ namespace ChatTalk.Server
                     break;
 
                 case "MSG":
-                    string msgId = parsedMessage.Values[1];
-                    string msg = parsedMessage.Values[2];
+                    msgId = parsedMessage.Values[1];
+                    msg = parsedMessage.Values[2];
                     await SendMessageAsync(msgId, msg);
                     break;
 
+                case "WHISPER":
+                    fromUsrNm = parsedMessage.Values[0];
+                    toUsrNm = parsedMessage.Values[1];
+                    msg = parsedMessage.Values[2];
+                    await SendWhisperMessageAsync(fromUsrNm, toUsrNm, message);
+                    break;
             }
         }
 
@@ -102,6 +110,11 @@ namespace ChatTalk.Server
         {
             string clientListMessage = MessageBuilder.CreateUsrListMessage(_server.GetClientDictionary().Keys);
             await _server.BroadcastAsync(clientListMessage);
+        }
+
+        private async Task SendWhisperMessageAsync(string fromUsrNm, string toUsrNm, string msg)
+        {
+            await _server.SendToClientAsync(toUsrNm, msg);
         }
 
         private bool ValidateUserName(string userName)
