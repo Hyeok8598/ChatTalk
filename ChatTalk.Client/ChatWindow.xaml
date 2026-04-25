@@ -12,7 +12,8 @@
         WindowStyle="None"
         ResizeMode="CanResize"
         ShowInTaskbar="True"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Closing="Window_Closing">
 
 
     <shell:WindowChrome.WindowChrome>

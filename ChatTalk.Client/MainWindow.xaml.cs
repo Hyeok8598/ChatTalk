@@ -4,18 +4,12 @@ using System.Windows.Media;
 
 namespace ChatTalk.Client
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        private Client _client = new Client();
-
         public MainWindow()
         {
             InitializeComponent();
         }
-
 
         /* ===================================================================== *
             1. Event
@@ -34,8 +28,9 @@ namespace ChatTalk.Client
             StatusTextBlock.Text = $"[접속 시도 중] {serverIP} : {portText}";
             StatusTextBlock.Foreground = Brushes.Orange;
             ConnectButton.IsEnabled = false;
+            Client client = new Client();
 
-            if(!await Connect(serverIP, (int)port))
+            if(!await Connect(client, serverIP, (int)port))
             {
                 StatusTextBlock.Text = $"[연결 실패] {serverIP} : {portText}";
                 StatusTextBlock.Foreground = Brushes.Orange;
@@ -43,7 +38,7 @@ namespace ChatTalk.Client
                 return;
             }
 
-            ChatWindow chatWindow = new ChatWindow(_client, this);
+            ChatWindow chatWindow = new ChatWindow(client, this);
             /* 
              * [Feature007] 26.04.05
              * Owner 사용하지 않고, ChatWindow에서 직접 받도록 변경
@@ -129,14 +124,14 @@ namespace ChatTalk.Client
             return port;
         }
 
-        private async Task<bool> Connect(string ip, int port)
+        private async Task<bool> Connect(Client client, string ip, int port)
         {
             try
             {
-                await _client.ConnectAsync(ip, port);
+                await client.ConnectAsync(ip, port);
 
                 string userName = UserNameTextBox.Text;
-                await _client.SendJoinMsgAsync(userName);
+                await client.SendJoinMsgAsync(userName);
 
                 return true;
             }

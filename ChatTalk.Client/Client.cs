@@ -113,6 +113,9 @@ namespace ChatTalk.Client
         {
             await SendLeaveMsgAsync();
 
+            /* 26.04.25 - Flush 시간 확보 */
+            await Task.Delay(100);
+
             _reader?.Dispose();
             _writer?.Dispose();
             _stream?.Dispose();
