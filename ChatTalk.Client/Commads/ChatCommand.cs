@@ -2,6 +2,9 @@
 
 namespace ChatTalk.Client.Command
 {
+    /// <summary>
+    /// 사용자 입력을 기반으로 생성되는 채팅 명령 객체
+    /// </summary>
     public class ChatCommand
     {
         public MessageType Type { get; }

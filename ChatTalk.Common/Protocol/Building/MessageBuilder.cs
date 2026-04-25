@@ -1,5 +1,9 @@
 ﻿namespace ChatTalk.Common.Protocol.Building
 {
+    /// <summary>
+    /// 프로토콜 메시지를 생성하는 빌더 클래스
+    /// 서버와 클라이언트 간 통신에 사용되는 문자열을 생성한다.
+    /// </summary>
     public static class MessageBuilder
     {
         private const string DELIMITER = "^||^";

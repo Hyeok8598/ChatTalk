@@ -3,6 +3,9 @@ using ChatTalk.Client.Model;
 
 namespace ChatTalk.Client.Commads
 {
+    /// <summary>
+    /// 사용자 입력 문자열을 ChatCommand 객체로 변환하는 파서 클래스
+    /// </summary>
     public static class ChatCommandParser
     {
         public static ChatCommand Parse(string command)

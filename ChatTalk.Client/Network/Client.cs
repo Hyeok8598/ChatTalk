@@ -7,10 +7,22 @@ using System.Net.Sockets;
 using System.Text;
 using System.Windows;
 
-namespace ChatTalk.Client
+/* ===================================================================== *
+ * Client
+ * --------------------------------------------------------------------- *
+ * 1. Fields
+ * 2. Constructor
+ * 3. UI Event Handler
+ * 4. User Defined Methods
+ * ===================================================================== */
+
+namespace ChatTalk.Client.Network
 {
     public class Client
     {
+        /* ===================================================================== *
+         * 1. Fields
+         * ===================================================================== */
         private TcpClient? _client;
         private StreamReader? _reader;
         private StreamWriter? _writer;
@@ -24,6 +36,61 @@ namespace ChatTalk.Client
         public event Action<string[], string>? UserListReceived;
         public event Action<string>? UserStatusReceived;
 
+        /* ===================================================================== *
+         * 2. Constructor
+         * ===================================================================== */
+
+        /* ===================================================================== *
+         * 3. UI Event Handler
+         * ===================================================================== */
+        public void HandleReceivedMessage(string receivedMessage)
+        {
+            ProtocolMessage protocalMessage = MessageParser.Parse(receivedMessage);
+
+            switch (protocalMessage)
+            {
+                case ChatProtocolMessage chat:
+                    if (_sentMessageIds.Contains(chat.MessageId)) return;
+
+                    ChatMessage normalMsg = new ChatMessage
+                    {
+                        SenderName = chat.SenderName,
+                        Content = chat.Content,
+                        Type = MessageType.Normal,
+                        Direction = MessageDirection.Received
+                    };
+
+                    MessageReceived?.Invoke(normalMsg);
+                    break;
+
+                case UsrListProtocolMessage usrList:
+                    string[] users = usrList.UserListContent;
+                    string userCnt = users.Length.ToString();
+                    UserListReceived?.Invoke(users, userCnt);
+                    break;
+
+                case WhisperProtocolMessage whisper:
+
+                    ChatMessage whisperMsg = new ChatMessage
+                    {
+                        SenderName = whisper.FromUserName,
+                        Content = whisper.Content,
+                        Type = MessageType.Whisper,
+                        Direction = MessageDirection.Received
+                    };
+
+                    MessageReceived?.Invoke(whisperMsg);
+                    break;
+
+                case IUserStatusProtocolMessage status:
+                    UserStatusReceived?.Invoke(status.StatusText);
+                    break;
+            }
+        }
+
+        /* ===================================================================== *
+         * 4. User Defined Methods
+         * ===================================================================== */
         public async Task ConnectAsync(string ip, int port)
         {
             _client = new TcpClient();
@@ -126,50 +193,6 @@ namespace ChatTalk.Client
             _writer = null;
             _stream = null;
             _client = null;
-        }
-
-        public void HandleReceivedMessage(string receivedMessage) {
-            ProtocolMessage protocalMessage = MessageParser.Parse(receivedMessage);
-
-            switch (protocalMessage)
-            {
-                case ChatProtocolMessage chat :
-                    if (_sentMessageIds.Contains(chat.MessageId)) return;
-                    
-                    ChatMessage normalMsg = new ChatMessage
-                    {
-                        SenderName = chat.SenderName,
-                        Content = chat.Content,
-                        Type = MessageType.Normal,
-                        Direction = MessageDirection.Received
-                    };
-
-                    MessageReceived?.Invoke(normalMsg);
-                    break;
-                    
-                case UsrListProtocolMessage usrList :
-                    string[] users = usrList.UserListContent;
-                    string userCnt = users.Length.ToString();
-                    UserListReceived?.Invoke(users, userCnt);
-                    break;
-
-                case WhisperProtocolMessage whisper  :
-
-                    ChatMessage whisperMsg = new ChatMessage
-                    {
-                        SenderName = whisper.FromUserName,
-                        Content = whisper.Content,
-                        Type = MessageType.Whisper,
-                        Direction = MessageDirection.Received
-                    };
-                    
-                    MessageReceived?.Invoke(whisperMsg);
-                    break;
-
-                case IUserStatusProtocolMessage status :
-                    UserStatusReceived?.Invoke(status.StatusText);
-                    break;
-            }
         }
     }
 }
