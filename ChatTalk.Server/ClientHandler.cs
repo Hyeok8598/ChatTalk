@@ -72,11 +72,13 @@ namespace ChatTalk.Server
                     string userName = join.UserName;
                     SetUserName(userName);
                     _server.GetClientDictionary().TryAdd(UserName, this);
+                    await SendJoinMessageAsync(join.UserName);
                     await SendClientListMessageAsync();
                     break;
 
                 case LeaveProtocolMessage leave:
                     _isRunning = false;
+                    await SendLeaveMessageAsync(leave.UserName);
                     await DisconnectAsync();
                     break;
 
@@ -104,6 +106,18 @@ namespace ChatTalk.Server
         private async Task SendMessageAsync(string messageId, string message)
         {
             string fullMsg = MessageBuilder.CreateChatMessage(UserName, messageId, message);
+            await _server.BroadcastAsync(fullMsg);
+        }
+
+        private async Task SendJoinMessageAsync(string JoinUser)
+        {
+            string fullMsg = MessageBuilder.CreateJoinMessage(JoinUser);
+            await _server.BroadcastAsync(fullMsg);
+        }
+
+        private async Task SendLeaveMessageAsync(string leftUser)
+        {
+            string fullMsg = MessageBuilder.CreateLeaveMessage(leftUser);
             await _server.BroadcastAsync(fullMsg);
         }
 

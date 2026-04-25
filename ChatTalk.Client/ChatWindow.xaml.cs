@@ -23,6 +23,7 @@ namespace ChatTalk.Client
             _mainWindow = mainWindow;
             _client.MessageReceived += OnMessageReceived;
             _client.UserListReceived += OnUserListReceived;
+            _client.UserStatusReceived += OnUserStatusReceived;
 
             _ = _client.ReceiveMsgAsync();
         }
@@ -205,6 +206,25 @@ namespace ChatTalk.Client
             ChatScrollViewer.ScrollToEnd();
         }
 
+        private void AddStatusMessage(string message)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                TextBlock statusText = new TextBlock
+                {
+                    Text = message,
+                    FontSize = 12,
+                    Foreground = Brushes.Gray,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 10, 0, 10),
+                    TextAlignment = TextAlignment.Center
+                };
+
+                ChatPanel.Children.Add(statusText);
+                ChatScrollViewer.ScrollToEnd();
+            });
+        }
+
         private async Task SendMessageAsync()
         {
             string message = MessageTextBox.Text.Trim();
@@ -264,6 +284,14 @@ namespace ChatTalk.Client
         {
             ConnectedUserCountTextBlock.Text = count;
             _connectedUsers = users;
+        }
+
+        private void OnUserStatusReceived(string statusText)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                AddStatusMessage(statusText);
+            });
         }
     }
 }
