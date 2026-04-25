@@ -2,17 +2,33 @@
 using System.Windows.Input;
 using System.Windows.Media;
 
+/* ===================================================================== *
+ * MainWindow
+ * --------------------------------------------------------------------- *
+ * 1. Fields
+ * 2. Constructor
+ * 3. Event
+ * 4. User Defined Methods
+ * ===================================================================== */
+
 namespace ChatTalk.Client
 {
     public partial class MainWindow : Window
     {
+        /* ===================================================================== *
+         * 1. Fields
+         * ===================================================================== */
+
+        /* ===================================================================== *
+         * 2. Constructor
+         * ===================================================================== */
         public MainWindow()
         {
             InitializeComponent();
         }
 
         /* ===================================================================== *
-            1. Event
+         * 3. Event
          * ===================================================================== */
         private async void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
@@ -72,8 +88,21 @@ namespace ChatTalk.Client
             this.Close();
         }
 
+        private void ChatWindow_Closed(Object? sender, EventArgs e)
+        {
+            StatusTextBlock.Text = "[연결대기]";
+            StatusTextBlock.Foreground = new SolidColorBrush(
+                (Color)ColorConverter.ConvertFromString("#F87171")
+            );
+            ConnectButton.IsEnabled = true;
+
+            this.Show();
+            this.WindowState = WindowState.Normal;
+            this.Activate();
+        }
+
         /* ===================================================================== *
-            2. 사용자정의 함수
+         * 4. User Defined Methods
          * ===================================================================== */
         private bool ValidateInputText()
         {
@@ -140,19 +169,6 @@ namespace ChatTalk.Client
                 MessageBox.Show($"서버 연결 실패 : {ex.Message}");
                 return false;
             }
-        }
-
-        private void ChatWindow_Closed(Object? sender, EventArgs e)
-        {
-            StatusTextBlock.Text = "[연결대기]";
-            StatusTextBlock.Foreground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString("#F87171")
-            );
-            ConnectButton.IsEnabled = true;
-
-            this.Show();
-            this.WindowState = WindowState.Normal;
-            this.Activate();
         }
     }
 }

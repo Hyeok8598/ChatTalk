@@ -2,20 +2,41 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace ChatTalk.Server
+/* ===================================================================== *
+ * TCPServer
+ * --------------------------------------------------------------------- *
+ * 1. Fields
+ * 2. Constructor
+ * 3. Server Lifecycle
+ * 4. User Defined Methods
+ * ===================================================================== */
+
+/// <summary>
+/// TCP 클라이언트 접속을 수락하고, 연결된 클라이언트에게 메시지를 전달하는 서버 클래스
+/// </summary>
+namespace ChatTalk.Server.Network
 {
 	public class TCPServer
 	{
-		private readonly int _port;
+        /* ===================================================================== *
+         * 1. Fields
+         * ===================================================================== */
+        private readonly int _port;
 		private TcpListener? _listener;
 		protected static ConcurrentDictionary<string, ClientHandler> _clientDictionary = new();
 
-		public TCPServer(int port)
+        /* ===================================================================== *
+         * 2. Constructor
+         * ===================================================================== */
+        public TCPServer(int port)
 		{
 			_port = port;
 		}
 
-		public void Start()
+        /* ===================================================================== *
+         * 3. Server Lifecycle
+         * ===================================================================== */
+        public void Start()
 		{
 			StartListner();
 
@@ -31,15 +52,17 @@ namespace ChatTalk.Server
 				_ = clientHandler.ReceiveAsync();
             }
 		}
-
-		public void StartListner()
+        public void StartListner()
 		{
             _listener = new TcpListener(IPAddress.Any, _port);
             _listener.Start();
             Console.WriteLine($"[Server Start] PORT : {_port}");
         }
 
-		public async Task BroadcastAsync(string message)
+        /* ===================================================================== *
+         * 4. User Defined Methods
+         * ===================================================================== */
+        public async Task BroadcastAsync(string message)
 		{
             Console.WriteLine($"[Broadcast Message] : {message}");
 			

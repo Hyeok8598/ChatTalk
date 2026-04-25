@@ -1,4 +1,6 @@
-﻿namespace ChatTalk.Server
+﻿using ChatTalk.Server.Network;
+
+namespace ChatTalk.Server
 {
     class Program
     {

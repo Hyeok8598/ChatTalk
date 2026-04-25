@@ -7,15 +7,30 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
+/* ===================================================================== *
+ * ChatWindow
+ * --------------------------------------------------------------------- *
+ * 1. Fields
+ * 2. Constructor
+ * 3. Event
+ * 4. User Defined Methods
+ * ===================================================================== */
+
 namespace ChatTalk.Client
 {
     public partial class ChatWindow : Window
     {
+        /* ===================================================================== *
+         * 1. Fields
+         * ===================================================================== */
         private readonly Client _client;
         private readonly MainWindow _mainWindow;
         private string[] _connectedUsers = Array.Empty<string>();
         private bool _isClosing = false;
 
+        /* ===================================================================== *
+         * 2. Constructor
+         * ===================================================================== */
         public ChatWindow(Client client, MainWindow mainWindow)
         {
             InitializeComponent();
@@ -29,7 +44,7 @@ namespace ChatTalk.Client
         }
 
         /* ===================================================================== *
-            1. Event
+            3. Event
          * ===================================================================== */
         private void Minimize_Click(object sender, RoutedEventArgs e)
         {
@@ -98,7 +113,7 @@ namespace ChatTalk.Client
         }
 
         /* ===================================================================== *
-            2. 사용자 정의 함수
+         * 4. User Defined Methods
          * ===================================================================== */
         private void AddMyMessage(ChatMessage chatMessage)
         {

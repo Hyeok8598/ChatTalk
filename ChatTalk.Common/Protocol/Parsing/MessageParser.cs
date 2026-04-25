@@ -2,6 +2,10 @@
 
 namespace ChatTalk.Common.Protocol.Parsing
 {
+    /// <summary>
+    /// 서버와 클라이언트 간에 송수신되는 프로토콜 문자열을
+    /// ProtocolMessage 객체로 변환하는 파서 클래스
+    /// </summary>
     public static class MessageParser
     {
         private const string DELIMITER = "^||^";

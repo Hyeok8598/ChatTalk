@@ -1,5 +1,8 @@
 ﻿namespace ChatTalk.Common.Protocol.Messages
 {
+    /// <summary>
+    /// 일반 채팅 메시지를 나타내는 프로토콜 클래스
+    /// </summary>
     public class ChatProtocolMessage : ProtocolMessage
     {
         public string SenderName { get; }

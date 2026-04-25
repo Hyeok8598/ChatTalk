@@ -3,10 +3,24 @@ using ChatTalk.Common.Protocol.Building;
 using ChatTalk.Common.Protocol.Messages;
 using ChatTalk.Common.Protocol.Parsing;
 
-namespace ChatTalk.Server
+/* ===================================================================== *
+ * ClientHandler
+ * --------------------------------------------------------------------- *
+ * 1. Fields
+ * 2. Constructor
+ * 3. Network (Send / Receive)
+ * 4. Message Handling
+ * 5. Message Sending
+ * 6. User Defined Methods
+ * ===================================================================== */
+
+namespace ChatTalk.Server.Network
 {
     public class ClientHandler
     {
+        /* ===================================================================== *
+         * 1. Fields
+         * ===================================================================== */
         private readonly StreamReader _reader;
         private readonly StreamWriter _writer;
         private readonly TCPServer _server;
@@ -17,6 +31,9 @@ namespace ChatTalk.Server
 
         public string UserName { get; private set; } = "UnKnown";
 
+        /* ===================================================================== *
+         * 2. Constructor
+         * ===================================================================== */
         public ClientHandler(TcpClient client, TCPServer server)
         {
             _client = client;
@@ -27,6 +44,9 @@ namespace ChatTalk.Server
             _writer = new StreamWriter(stream) { AutoFlush = true };
         }
 
+        /* ===================================================================== *
+         * 3. Network (Send / Receive)
+         * ===================================================================== */
         public async Task SendAsync(string message)
         {
             await _writer.WriteLineAsync(message);
@@ -59,6 +79,9 @@ namespace ChatTalk.Server
             }
         }
 
+        /* ===================================================================== *
+         * 4. Message Handling
+         * ===================================================================== */
         private async Task HandleMessage(string message)
         {
             Console.WriteLine($"[Received MSG] : {message}");
@@ -97,12 +120,9 @@ namespace ChatTalk.Server
             }
         }
 
-        private void SetUserName(string userName)
-        {
-            if (!ValidateUserName(userName)) return;
-            this.UserName = userName;
-        }
-
+        /* ===================================================================== *
+         * 5. Message Sending
+         * ===================================================================== */
         private async Task SendMessageAsync(string messageId, string message)
         {
             string fullMsg = MessageBuilder.CreateChatMessage(UserName, messageId, message);
@@ -147,6 +167,9 @@ namespace ChatTalk.Server
             }
         }
 
+        /* ===================================================================== *
+         * 6. User Defined Methods
+         * ===================================================================== */
         private bool ValidateUserName(string userName)
         {
             if (string.IsNullOrWhiteSpace(userName)) return false;
@@ -154,6 +177,12 @@ namespace ChatTalk.Server
             if (userName.Contains("^||^")) return false;
 
             return true;
+        }
+
+        private void SetUserName(string userName)
+        {
+            if (!ValidateUserName(userName)) return;
+            this.UserName = userName;
         }
 
         private async Task DisconnectAsync()
