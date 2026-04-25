@@ -52,7 +52,7 @@ namespace ChatTalk.Server
             }
             finally
             {
-                Disconnect();
+                await DisconnectAsync();
                 Console.WriteLine($"[Client Disconnected] {UserName}");
             }
         }
@@ -75,8 +75,7 @@ namespace ChatTalk.Server
 
                 case "LEAVE":
                     _isRunning = false;
-                    _server.GetClientDictionary().TryRemove(UserName, out _);
-                    await SendClientListMessageAsync();
+                    await DisconnectAsync();
                     break;
 
                 case "MSG":
@@ -126,10 +125,14 @@ namespace ChatTalk.Server
             return true;
         }
 
-        private void Disconnect()
+        private async Task DisconnectAsync()
         {
             if (_isDisconnected) return;
             _isDisconnected = true;
+            _isRunning = false;
+
+            _server.GetClientDictionary().TryRemove(UserName, out _);
+            await SendClientListMessageAsync();
 
             _reader?.Dispose();
             _writer?.Dispose();

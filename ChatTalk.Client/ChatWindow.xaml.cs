@@ -1,5 +1,7 @@
 ﻿using ChatTalk.Client.Model;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading.Channels;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -9,14 +11,12 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace ChatTalk.Client
 {
-    /// <summary>
-    /// Interaction logic for ChatWindow.xaml
-    /// </summary>
     public partial class ChatWindow : Window
     {
         private readonly Client _client;
         private readonly MainWindow _mainWindow;
         private string[] _connectedUsers = Array.Empty<string>();
+        private bool _isClosing = false;
 
         public ChatWindow(Client client, MainWindow mainWindow)
         {
@@ -27,7 +27,6 @@ namespace ChatTalk.Client
             _client.UserListReceived += OnUserListReceived;
 
             _ = _client.ReceiveMsgAsync();
-            //this.ReceiveMessageAsync();
         }
 
         /* ===================================================================== *
@@ -52,7 +51,16 @@ namespace ChatTalk.Client
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            _client?.Disconnect();
+            this.Close();
+        }
+
+        private async void Window_Closing(object sender, CancelEventArgs e)
+        {
+            if (_isClosing) return;
+            e.Cancel = true;
+            _isClosing = true;
+            await _client.Disconnect();
+
             this.Close();
         }
 

@@ -10,8 +10,6 @@ namespace ChatTalk.Server
 		private TcpListener? _listener;
 		protected static ConcurrentDictionary<string, ClientHandler> _clientDictionary = new();
 
-        //public string UserName { get; private set; } = "Unknown";
-
 		public TCPServer(int port)
 		{
 			_port = port;
