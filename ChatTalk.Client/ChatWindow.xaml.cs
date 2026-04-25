@@ -1,13 +1,11 @@
-﻿using ChatTalk.Client.Model;
+﻿using ChatTalk.Client.Commads;
+using ChatTalk.Client.Command;
+using ChatTalk.Client.Model;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Threading.Channels;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ChatTalk.Client
 {
@@ -211,45 +209,43 @@ namespace ChatTalk.Client
         {
             string message = MessageTextBox.Text.Trim();
             ChatMessage chatMessage;
+            ChatCommand chatCommand;
 
             if (string.IsNullOrEmpty(message)) return;
 
-            if (message.StartsWith("/w "))
+            try
             {
-                string[] parts = message.Split(" ", 3); /* /w user 안녕하세요. */
-                if (parts.Length < 3)
-                {
-                    MessageBox.Show("귓속말 형식이 올바르지 않습니다. (/w 대상유저 메시지)");
-                    return;
-                }
-                else
-                {
-                    chatMessage = new ChatMessage
-                    {
-                        SenderName = _client.UserName,
-                        Content = message,
-                        Type = MessageType.Whisper,
-                        Direction = MessageDirection.Sent
-                    };
-
-                    string toUsrNm = parts[1];
-                    string msg     = parts[2];
-                    await _client.SendWhisperMsgAsync(toUsrNm, msg);
-                }
-            } 
-            else
+                chatCommand = ChatCommandParser.Parse(message);
+            }
+            catch (Exception ex)
             {
-                chatMessage = new ChatMessage
-                {
-                    SenderName = _client.UserName,
-                    Content = message,
-                    Type = MessageType.Normal,
-                    Direction = MessageDirection.Sent
-                };
-
-                await _client.SendChatMsgAsync(message);
+                MessageBox.Show(ex.Message);
+                return;
             }
 
+            if(chatCommand.Type == MessageType.Whisper)
+            {
+                if(string.IsNullOrEmpty(chatCommand.ToUserName))
+                {
+                    MessageBox.Show("귓속말 대상 사용자가 없습니다.");
+                    return;
+                }
+
+                if (!_connectedUsers.Contains(chatCommand.ToUserName))
+                {
+                    MessageBox.Show("존재하지 않는 사용자입니다.");
+                    return;
+                }
+
+                chatMessage = chatCommand.ToChatMessage(_client.UserName);
+
+                await _client.SendWhisperMsgAsync(chatMessage.SenderName, chatMessage.Content);
+            }
+            else
+            {
+                chatMessage = chatCommand.ToChatMessage(_client.UserName);
+                await _client.SendChatMsgAsync(chatMessage.Content);
+            }
 
             this.AddMyMessage(chatMessage);
             MessageTextBox.Clear();

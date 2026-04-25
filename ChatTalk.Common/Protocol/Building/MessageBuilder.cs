@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ChatTalk.Common.Protocol
+﻿namespace ChatTalk.Common.Protocol.Building
 {
     public static class MessageBuilder
     {
@@ -26,7 +22,7 @@ namespace ChatTalk.Common.Protocol
 
         public static string CreateLeaveMessage(string userNm)
         {
-            return $"LEAVE{DELIMITER}\n";
+            return $"LEAVE{DELIMITER}{userNm}\n";
         }
 
         public static string CreateWhisperMessage(string fromUsrNm, string toUsrNm, string msg)

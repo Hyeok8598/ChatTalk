@@ -1,5 +1,7 @@
 ﻿using System.Net.Sockets;
-using ChatTalk.Common.Protocol;
+using ChatTalk.Common.Protocol.Building;
+using ChatTalk.Common.Protocol.Messages;
+using ChatTalk.Common.Protocol.Parsing;
 
 namespace ChatTalk.Server
 {
@@ -63,31 +65,31 @@ namespace ChatTalk.Server
 
             string msg, msgId, fromUsrNm, toUsrNm;
 
-            ParsedMessage parsedMessage = MessageParser.Parse(message);
-            switch (parsedMessage.Type)
+            ProtocolMessage protocolMessage = MessageParser.Parse(message);
+            switch (protocolMessage)
             {   
-                case "JOIN":
-                    string userName = parsedMessage.Values[0];
+                case JoinProtocolMessage join:
+                    string userName = join.UserName;
                     SetUserName(userName);
                     _server.GetClientDictionary().TryAdd(UserName, this);
                     await SendClientListMessageAsync();
                     break;
 
-                case "LEAVE":
+                case LeaveProtocolMessage leave:
                     _isRunning = false;
                     await DisconnectAsync();
                     break;
 
-                case "MSG":
-                    msgId = parsedMessage.Values[1];
-                    msg = parsedMessage.Values[2];
+                case ChatProtocolMessage chat:
+                    msgId = chat.MessageId;
+                    msg = chat.Content;
                     await SendMessageAsync(msgId, msg);
                     break;
 
-                case "WHISPER":
-                    fromUsrNm = parsedMessage.Values[0];
-                    toUsrNm = parsedMessage.Values[1];
-                    msg = parsedMessage.Values[2];
+                case WhisperProtocolMessage whisper:
+                    fromUsrNm = whisper.FromUserName;
+                    toUsrNm = whisper.ToUserName;
+                    msg = whisper.Content;
                     await SendWhisperMessageAsync(fromUsrNm, toUsrNm, message);
                     break;
             }
@@ -113,7 +115,22 @@ namespace ChatTalk.Server
 
         private async Task SendWhisperMessageAsync(string fromUsrNm, string toUsrNm, string msg)
         {
-            await _server.SendToClientAsync(toUsrNm, msg);
+            if(!_server.GetClientDictionary().TryGetValue(toUsrNm, out ClientHandler? clientHandler))
+            {
+                Console.WriteLine($"[Whisper Failed] User not found: {toUsrNm}");
+                return;
+            }
+
+            try
+            {
+                await _server.SendToClientAsync(toUsrNm, msg);
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Whisper Failed] UserName: {toUsrNm}, Error:{ex.Message}");
+                _server.GetClientDictionary().TryRemove(toUsrNm, out _);
+            }
         }
 
         private bool ValidateUserName(string userName)
