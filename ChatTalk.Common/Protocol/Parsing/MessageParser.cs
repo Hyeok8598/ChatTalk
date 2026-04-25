@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
+﻿using ChatTalk.Common.Protocol.Messages;
 
-namespace ChatTalk.Common.Protocol
+namespace ChatTalk.Common.Protocol.Parsing
 {
     public static class MessageParser
     {

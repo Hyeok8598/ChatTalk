@@ -1,5 +1,7 @@
 ﻿using System.Net.Sockets;
-using ChatTalk.Common.Protocol;
+using ChatTalk.Common.Protocol.Building;
+using ChatTalk.Common.Protocol.Messages;
+using ChatTalk.Common.Protocol.Parsing;
 
 namespace ChatTalk.Server
 {
@@ -113,7 +115,22 @@ namespace ChatTalk.Server
 
         private async Task SendWhisperMessageAsync(string fromUsrNm, string toUsrNm, string msg)
         {
-            await _server.SendToClientAsync(toUsrNm, msg);
+            if(!_server.GetClientDictionary().TryGetValue(toUsrNm, out ClientHandler? clientHandler))
+            {
+                Console.WriteLine($"[Whisper Failed] User not found: {toUsrNm}");
+                return;
+            }
+
+            try
+            {
+                await _server.SendToClientAsync(toUsrNm, msg);
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Whisper Failed] UserName: {toUsrNm}, Error:{ex.Message}");
+                _server.GetClientDictionary().TryRemove(toUsrNm, out _);
+            }
         }
 
         private bool ValidateUserName(string userName)

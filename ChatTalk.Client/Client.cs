@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
+﻿using ChatTalk.Client.Model;
+using ChatTalk.Common.Protocol.Building;
+using ChatTalk.Common.Protocol.Messages;
+using ChatTalk.Common.Protocol.Parsing;
 using System.IO;
 using System.Net.Sockets;
-using System.Security.Policy;
 using System.Text;
 using System.Windows;
-using ChatTalk.Client.Model;
-using ChatTalk.Common.Protocol;
 
 namespace ChatTalk.Client
 {
@@ -82,10 +82,12 @@ namespace ChatTalk.Client
 
         public async Task ReceiveMsgAsync()
         {
-            byte[] buffer = new byte[1024];
+            if (_client == null || _reader == null)
+                return;
+
             try
             {
-                while (_client != null && _client.Connected)
+                while (_client.Connected)
                 {
                     string? receivedMsg = await _reader.ReadLineAsync();
 
