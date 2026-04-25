@@ -22,8 +22,7 @@ namespace ChatTalk.Client
 
         public event Action<ChatMessage>? MessageReceived;
         public event Action<string[], string>? UserListReceived;
-
-        public bool IsConnected => _client != null && _client.Connected;
+        public event Action<string>? UserStatusReceived;
 
         public async Task ConnectAsync(string ip, int port)
         {
@@ -165,6 +164,10 @@ namespace ChatTalk.Client
                     };
                     
                     MessageReceived?.Invoke(whisperMsg);
+                    break;
+
+                case IUserStatusProtocolMessage status :
+                    UserStatusReceived?.Invoke(status.StatusText);
                     break;
             }
         }
