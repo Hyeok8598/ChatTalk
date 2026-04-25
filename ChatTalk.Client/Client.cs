@@ -127,21 +127,18 @@ namespace ChatTalk.Client
             _client = null;
         }
 
-        public void HandleReceivedMessage(string parsingData) {
-            ParsedMessage parsedMessage = MessageParser.Parse(parsingData);
+        public void HandleReceivedMessage(string receivedMessage) {
+            ProtocolMessage protocalMessage = MessageParser.Parse(receivedMessage);
 
-            switch(parsedMessage.Type)
+            switch (protocalMessage)
             {
-                case "MSG"    :
-                    string receivedMsgId = parsedMessage.Values[1];
-                    if (_sentMessageIds.Contains(receivedMsgId)) return;
-                    string userNm  = parsedMessage.Values[0];
-                    string message = parsedMessage.Values[2];
-
+                case ChatProtocolMessage chat :
+                    if (_sentMessageIds.Contains(chat.MessageId)) return;
+                    
                     ChatMessage normalMsg = new ChatMessage
                     {
-                        SenderName = userNm,
-                        Content = message,
+                        SenderName = chat.SenderName,
+                        Content = chat.Content,
                         Type = MessageType.Normal,
                         Direction = MessageDirection.Received
                     };
@@ -149,20 +146,18 @@ namespace ChatTalk.Client
                     MessageReceived?.Invoke(normalMsg);
                     break;
                     
-                case "USRLIST" :
-                    string[] users = parsedMessage.Values[0].Split(",");
+                case UsrListProtocolMessage usrList :
+                    string[] users = usrList.UserListContent;
                     string userCnt = users.Length.ToString();
                     UserListReceived?.Invoke(users, userCnt);
                     break;
 
-                case "WHISPER"  :
-                    string fromUsr = parsedMessage.Values[0];
-                    string msg     = parsedMessage.Values[2];
+                case WhisperProtocolMessage whisper  :
 
                     ChatMessage whisperMsg = new ChatMessage
                     {
-                        SenderName = fromUsr,
-                        Content = msg,
+                        SenderName = whisper.FromUserName,
+                        Content = whisper.Content,
                         Type = MessageType.Whisper,
                         Direction = MessageDirection.Received
                     };

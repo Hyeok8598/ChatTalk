@@ -63,31 +63,31 @@ namespace ChatTalk.Server
 
             string msg, msgId, fromUsrNm, toUsrNm;
 
-            ParsedMessage parsedMessage = MessageParser.Parse(message);
-            switch (parsedMessage.Type)
+            ProtocolMessage protocolMessage = MessageParser.Parse(message);
+            switch (protocolMessage)
             {   
-                case "JOIN":
-                    string userName = parsedMessage.Values[0];
+                case JoinProtocolMessage join:
+                    string userName = join.UserName;
                     SetUserName(userName);
                     _server.GetClientDictionary().TryAdd(UserName, this);
                     await SendClientListMessageAsync();
                     break;
 
-                case "LEAVE":
+                case LeaveProtocolMessage leave:
                     _isRunning = false;
                     await DisconnectAsync();
                     break;
 
-                case "MSG":
-                    msgId = parsedMessage.Values[1];
-                    msg = parsedMessage.Values[2];
+                case ChatProtocolMessage chat:
+                    msgId = chat.MessageId;
+                    msg = chat.Content;
                     await SendMessageAsync(msgId, msg);
                     break;
 
-                case "WHISPER":
-                    fromUsrNm = parsedMessage.Values[0];
-                    toUsrNm = parsedMessage.Values[1];
-                    msg = parsedMessage.Values[2];
+                case WhisperProtocolMessage whisper:
+                    fromUsrNm = whisper.FromUserName;
+                    toUsrNm = whisper.ToUserName;
+                    msg = whisper.Content;
                     await SendWhisperMessageAsync(fromUsrNm, toUsrNm, message);
                     break;
             }
